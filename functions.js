@@ -179,7 +179,7 @@ CustomFunctions.associate("PERTSD", function(min, likely, max, lambda) {
     "lambda must be > 0.");
   const mu = (min + lambda * likely + max) / (lambda + 2);
   const range = max - min;
-  return range * Math.sqrt((mu - min) * (max - mu)) / ((lambda + 2) * Math.sqrt(lambda + 3));
+  return Math.sqrt((mu - min) * (max - mu)) / Math.sqrt(lambda + 3);
 });
 
 /**
