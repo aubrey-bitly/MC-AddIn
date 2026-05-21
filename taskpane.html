@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monte Carlo Simulator v1</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+  <style>
+    /* ===== BASE RESET & TYPOGRAPHY ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f5f5; color: #222; font-size: 14px; }
+    .container { padding: 12px; }
+    h1 { font-size: 1.1rem; font-weight: 600; color: #0078d4; margin-bottom: 2px; }
+    .subtitle { font-size: 0.75rem; color: #666; margin-bottom: 14px; }
+
+    /* ===== CARDS ===== */
+    .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; padding: 14px; margin-bottom: 12px; }
+    .card h2 { font-size: 0.8rem; font-weight: 600; color: #0078d4; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e8f4fd; padding-bottom: 6px; }
+
+    /* ===== FORMS ===== */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 10px; }
+    .form-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px; flex-wrap: wrap; }
+    label { display: block; font-size: 0.72rem; font-weight: 500; color: #555; margin-bottom: 2px; }
+    input[type=number], input[type=text] { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px 7px; font-size: 0.82rem; }
+    input[type=range] { width: 100%; cursor: pointer; }
+    input[type=number]:focus, input[type=text]:focus { outline: none; border-color: #0078d4; box-shadow: 0 0 0 2px rgba(0,120,212,0.15); }
+    select { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 5px 7px; font-size: 0.82rem; background: #fff; }
+
+    /* ===== BUTTONS ===== */
+    .btn { display: inline-block; padding: 7px 16px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.82rem; font-weight: 500; transition: background 0.15s; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: #0078d4; color: white; }
+    .btn-primary:hover:not(:disabled) { background: #005fa3; }
+    .btn-secondary { background: #f3f3f3; color: #333; border: 1px solid #ccc; }
+    .btn-secondary:hover:not(:disabled) { background: #e6e6e6; }
+    .btn-danger { background: #d13438; color: white; }
+    .btn-danger:hover:not(:disabled) { background: #a80000; }
+    .excel-btn { background: #217346; color: white; }
+    .excel-btn:hover:not(:disabled) { background: #185c37; }
+    .btn-run { background: #0078d4; color: white; font-size: 1rem; padding: 10px 28px; width: 100%; margin-bottom: 8px; }
+    .btn-run:hover:not(:disabled) { background: #005fa3; }
+
+    /* ===== TABS ===== */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid #e0e0e0; margin-bottom: 14px; }
+    .tab { padding: 7px 14px; font-size: 0.8rem; font-weight: 500; cursor: pointer; border: none; background: none; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+    .tab.active { color: #0078d4; border-bottom-color: #0078d4; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ===== VARIABLE CARDS ===== */
+    .var-card { background: #f8fbff; border: 1px solid #ddeeff; border-radius: 5px; padding: 10px; margin-bottom: 8px; }
+    .var-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .var-card-header strong { font-size: 0.85rem; color: #0078d4; }
+    .var-meta { font-size: 0.7rem; color: #888; margin-top: 4px; }
+    .remove-btn { background: none; border: none; color: #c00; cursor: pointer; font-size: 1.1rem; padding: 0 4px; line-height: 1; }
+    .remove-btn:hover { color: #800; }
+
+    /* ===== ADD VARIABLE FORM ===== */
+    .add-var-form { background: #fffdf0; border: 1px solid #ffe8a1; border-radius: 5px; padding: 12px; margin-bottom: 8px; }
+    .add-var-form h3 { font-size: 0.78rem; font-weight: 600; color: #7a5900; margin-bottom: 10px; }
+
+    /* ===== SLIDER ROW ===== */
+    .slider-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .slider-row input[type=range] { flex: 1; }
+    .slider-row input[type=number] { width: 80px; flex-shrink: 0; }
+    .slider-label { font-size: 0.75rem; font-weight: 500; color: #555; white-space: nowrap; }
+
+    /* ===== CORRELATION MATRIX ===== */
+    .corr-wrap { overflow-x: auto; }
+    .corr-table { border-collapse: collapse; font-size: 0.72rem; min-width: 100%; }
+    .corr-table th, .corr-table td { padding: 3px 6px; border: 1px solid #ddd; text-align: center; white-space: nowrap; }
+    .corr-table th { background: #f0f7ff; font-weight: 600; font-size: 0.68rem; }
+    .corr-table td input { width: 54px; border: none; background: transparent; text-align: center; font-size: 0.72rem; }
+    .corr-table td input:focus { outline: 1px solid #0078d4; border-radius: 2px; }
+
+    /* ===== PROGRESS ===== */
+    #progress-wrap { background: #e0e0e0; border-radius: 2px; margin: 8px 0; display: none; }
+    #progress-bar { height: 5px; background: linear-gradient(90deg, #0078d4, #50e3c2); border-radius: 2px; width: 0%; transition: width 0.3s; }
+
+    /* ===== STATS DISPLAY ===== */
+    .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 10px; }
+    .stat-cell { background: #f8fbff; border: 1px solid #ddeeff; border-radius: 4px; padding: 6px 8px; }
+    .stat-label { font-size: 0.67rem; color: #888; }
+    .stat-value { font-size: 0.95rem; font-weight: 600; color: #0078d4; }
+
+    /* ===== PERCENTILE TABLE ===== */
+    .pct-table { width: 100%; border-collapse: collapse; font-size: 0.74rem; }
+    .pct-table th { background: #f0f7ff; color: #0078d4; font-weight: 600; padding: 4px 8px; text-align: left; border: 1px solid #ddeeff; }
+    .pct-table td { padding: 3px 8px; border: 1px solid #eee; }
+    .pct-table tr:nth-child(even) td { background: #f9f9f9; }
+
+    /* ===== HISTOGRAM BARS ===== */
+    .bar-chart { margin-top: 10px; }
+    .bar-row { display: flex; align-items: center; margin-bottom: 3px; }
+    .bar-label { font-size: 0.65rem; color: #555; width: 70px; text-align: right; padding-right: 6px; flex-shrink: 0; }
+    .bar-track { flex: 1; background: #f0f0f0; border-radius: 2px; height: 14px; position: relative; overflow: hidden; }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, #0078d4, #50a3e0); border-radius: 2px; transition: width 0.4s; }
+    .bar-val { font-size: 0.63rem; color: #777; margin-left: 5px; width: 36px; flex-shrink: 0; }
+
+    /* ===== STATUS / TOASTS ===== */
+    .status-msg { font-size: 0.78rem; color: #666; padding: 4px 0; }
+    .status-ok { color: #217346; }
+    .status-err { color: #d13438; }
+    #toast-container { position: fixed; bottom: 16px; right: 16px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast { background: #333; color: #fff; padding: 8px 14px; border-radius: 5px; font-size: 0.78rem; max-width: 260px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); animation: slideIn 0.2s ease; }
+    .toast.success { background: #217346; }
+    .toast.error { background: #d13438; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+
+    /* ===== DISABLED IN BROWSER ===== */
+    .disabled-in-browser { opacity: 0.45; cursor: not-allowed; }
+    .disabled-in-browser::after { content: attr(title); }
+    .hidden { display: none !important; }
+
+    /* ===== SECTION SEPARATORS ===== */
+    .section-sep { border: none; border-top: 1px solid #eee; margin: 12px 0; }
+    .info-box { background: #e8f4fd; border: 1px solid #b3d6f5; border-radius: 4px; padding: 8px 10px; font-size: 0.76rem; color: #0064a8; margin-bottom: 10px; }
+    .warn-box { background: #fff4ce; border: 1px solid #ffe4a0; border-radius: 4px; padding: 8px 10px; font-size: 0.76rem; color: #7a5900; margin-bottom: 10px; }
+
+    /* ===== CHARTS TAB ===== */
+    .chart-section { margin-bottom: 16px; }
+    .chart-section h3 { font-size: 0.8rem; font-weight: 600; color: #444; margin-bottom: 8px; }
+
+    /* ===== RESPONSIVE ADJUSTMENTS FOR TASK PANE ===== */
+    @media (max-width: 380px) {
+      .stat-grid { grid-template-columns: repeat(2, 1fr); }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="toast-container"></div>
+<div class="container">
+  <h1>Monte Carlo Simulator v1</h1>
+  <p class="subtitle" id="office-mode-label">Loading...</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showMainTab('tab-setup', this)">Setup</button>
+    <button class="tab" onclick="showMainTab('tab-corr', this)">Correlations</button>
+    <button class="tab" onclick="showMainTab('tab-results', this)">Results</button>
+    <button class="tab" onclick="showMainTab('tab-charts', this)">Charts</button>
+  </div>
+
+  <!-- ===== TAB 1: SETUP ===== -->
+  <div id="tab-setup" class="tab-panel active">
+
+    <div class="card">
+      <h2>Simulation Settings</h2>
+      <div style="margin-bottom:10px;">
+        <label>Number of Simulations</label>
+        <div class="slider-row">
+          <input type="range" id="num-sims-slider" min="100" max="10000" step="100" value="1000" oninput="syncSims(this.value,'slider')" />
+          <input type="number" id="num-sims" min="100" max="10000" step="100" value="1000" oninput="syncSims(this.value,'input')" style="width:80px;" />
+        </div>
+      </div>
+      <div>
+        <label>Output Sheet Name</label>
+        <input type="text" id="sheet-name" value="MC_Results" style="max-width:200px;" />
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Variables</h2>
+      <div id="var-list"></div>
+      <div id="add-var-form-container"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+        <button class="btn btn-secondary" onclick="showAddVarForm()">+ Add Variable</button>
+        <button class="btn excel-btn" id="btn-import-excel" title="Requires Excel" onclick="importFromExcel()">Import from Excel Selection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 2: CORRELATIONS ===== -->
+  <div id="tab-corr" class="tab-panel">
+    <div class="card">
+      <h2>Correlation Matrix</h2>
+      <p class="info-box">Edit pairwise correlations. Values in [-1, 1]. Diagonal is always 1. Matrix must be positive semi-definite — click "Fix PSD" if highlighted in red.</p>
+      <div id="corr-matrix-container" class="corr-wrap"></div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="fixPSD()">Fix PSD</button>
+        <button class="btn btn-secondary" onclick="resetDefaultCorr()">Reset to Defaults</button>
+        <button class="btn excel-btn" id="btn-historical-corr" onclick="buildCorrFromHistorical()">Build from Historical Data</button>
+      </div>
+      <div id="corr-status" class="status-msg" style="margin-top:6px;"></div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3: RESULTS ===== -->
+  <div id="tab-results" class="tab-panel">
+    <div id="progress-wrap"><div id="progress-bar"></div></div>
+    <button class="btn btn-run" onclick="runSim()">&#9654; Run Simulation</button>
+    <div id="sim-status" class="status-msg" style="margin-bottom:8px;"></div>
+    <div id="sim-stats"></div>
+    <div id="write-excel-section" style="margin-top:10px;display:none;">
+      <button class="btn excel-btn" style="width:100%;" onclick="writeResultsToExcel()">Write Results to Excel</button>
+    </div>
+  </div>
+
+  <!-- ===== TAB 4: CHARTS ===== -->
+  <div id="tab-charts" class="tab-panel">
+    <div class="card">
+      <h2>Excel Charts</h2>
+      <div id="no-excel-charts" class="warn-box" style="display:none;">
+        Open this add-in inside Excel to use chart features.
+      </div>
+
+      <div class="chart-section">
+        <h3>Histogram Chart</h3>
+        <p style="font-size:0.75rem;color:#666;margin-bottom:8px;">Creates a column chart from simulation histogram data for the selected variable.</p>
+        <div class="form-row">
+          <div style="flex:1;">
+            <label>Variable</label>
+            <select id="chart-var-select"></select>
+          </div>
+          <button class="btn excel-btn" id="btn-histogram-chart" onclick="createHistogramChart()">Create Histogram Chart</button>
+        </div>
+      </div>
+
+      <hr class="section-sep" />
+
+      <div class="chart-section">
+        <h3>Stock Price Overlay</h3>
+        <p style="font-size:0.75rem;color:#666;margin-bottom:8px;">Creates two side-by-side charts: stock price history (left) and simulated price distribution (right).</p>
+        <div class="form-grid">
+          <div>
+            <label>Price History Range (e.g. A1:B200)</label>
+            <input type="text" id="price-history-range" placeholder="A1:B200" />
+          </div>
+          <div>
+            <label>Current Price Cell (e.g. C1)</label>
+            <input type="text" id="current-price-cell" placeholder="C1" />
+          </div>
+          <div>
+            <label>Variable for Price Distribution</label>
+            <select id="price-var-select"></select>
+          </div>
+        </div>
+        <button class="btn excel-btn" id="btn-price-overlay" onclick="createPriceOverlay()">Create Stock Price Overlay</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+"use strict";
+
+// =============================================================================
+//  OFFICE.JS INITIALIZATION
+// =============================================================================
+
+let officeReady = false;
+
+Office.onReady((info) => {
+  if (info.host === Office.HostType.Excel) {
+    officeReady = true;
+    document.getElementById("office-mode-label").textContent = "Running in Excel — all features enabled";
+    document.getElementById("office-mode-label").style.color = "#217346";
+    document.getElementById("write-excel-section") && (document.getElementById("write-excel-section").style.display = "block");
+    // Reveal chart section (already visible but buttons now functional)
+  } else {
+    document.getElementById("office-mode-label").textContent = "Browser preview mode — Excel features disabled";
+    document.getElementById("office-mode-label").style.color = "#999";
+    // Disable excel-only buttons
+    document.querySelectorAll(".excel-btn").forEach(btn => {
+      btn.classList.add("disabled-in-browser");
+      btn.setAttribute("title", "Requires Excel");
+    });
+    document.getElementById("no-excel-charts") && (document.getElementById("no-excel-charts").style.display = "block");
+  }
+  setupUI();
+});
+
+// Fallback: if Office.js doesn't initialize (pure browser load), still set up UI
+setTimeout(() => {
+  const lbl = document.getElementById("office-mode-label");
+  if (lbl && lbl.textContent === "Loading...") {
+    lbl.textContent = "Browser mode — Excel features unavailable";
+    lbl.style.color = "#999";
+    document.querySelectorAll(".excel-btn").forEach(btn => {
+      btn.classList.add("disabled-in-browser");
+      btn.setAttribute("title", "Requires Excel");
+    });
+    const nc = document.getElementById("no-excel-charts");
+    if (nc) nc.style.display = "block";
+    setupUI();
+  }
+}, 3000);
+
+// =============================================================================
+//  MATH LIBRARY (self-contained — all algorithms inline, no imports)
+// =============================================================================
+
+// ---- Normal CDF inverse (Peter Acklam's rational approximation) ----
+function normalInv(p) {
+  if (p <= 0) return -Infinity;
+  if (p >= 1) return Infinity;
+  const a = [-3.969683028665376e+01, 2.209460984245205e+02, -2.759285104469687e+02,
+              1.383577518672690e+02, -3.066479806614716e+01,  2.506628277459239e+00];
+  const b = [-5.447609879822406e+01, 1.615858368580409e+02, -1.556989798598866e+02,
+              6.680131188771972e+01, -1.328068155288572e+01];
+  const c = [-7.784894002430293e-03, -3.223964580411365e-01, -2.400758277161838e+00,
+              -2.549732539343734e+00,  4.374664141464968e+00,  2.938163982698783e+00];
+  const d = [ 7.784695709041462e-03,  3.224671290700398e-01,  2.445134137142996e+00,  3.754408661907416e+00];
+  const pLow = 0.02425, pHigh = 1 - pLow;
+  let x;
+  if (p < pLow) {
+    const q = Math.sqrt(-2 * Math.log(p));
+    x = (((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  } else if (p <= pHigh) {
+    const q = p - 0.5, r = q * q;
+    x = (((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q / (((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);
+  } else {
+    const q = Math.sqrt(-2 * Math.log(1 - p));
+    x = -(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5]) / ((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);
+  }
+  return x;
+}
+
+// ---- Log-Gamma (Lanczos approximation) ----
+function logGamma(x) {
+  const c = [76.18009172947146, -86.50532032941677, 24.01409824083091,
+             -1.231739572450155, 0.1208650973866179e-2, -0.5395239384953e-5];
+  let y = x, tmp = x + 5.5;
+  tmp -= (x + 0.5) * Math.log(tmp);
+  let ser = 1.000000000190015;
+  for (let j = 0; j < 6; j++) ser += c[j] / ++y;
+  return -tmp + Math.log(2.5066282746310005 * ser / x);
+}
+
+// ---- Beta continued fraction (Lentz's method) ----
+function betaCF(a, b, x) {
+  const MAXIT = 200, EPS = 3e-12, FPMIN = 1e-30;
+  const qab = a + b, qap = a + 1, qam = a - 1;
+  let c = 1, d = 1 - qab * x / qap;
+  if (Math.abs(d) < FPMIN) d = FPMIN;
+  d = 1 / d;
+  let h = d;
+  for (let m = 1; m <= MAXIT; m++) {
+    const m2 = 2 * m;
+    let aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+    d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+    c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+    d = 1 / d; h *= d * c;
+    aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+    d = 1 + aa * d; if (Math.abs(d) < FPMIN) d = FPMIN;
+    c = 1 + aa / c; if (Math.abs(c) < FPMIN) c = FPMIN;
+    d = 1 / d;
+    const del = d * c;
+    h *= del;
+    if (Math.abs(del - 1) < EPS) break;
+  }
+  return h;
+}
+
+// ---- Regularized incomplete Beta ----
+function betaInc(a, b, x) {
+  if (x < 0 || x > 1) throw new Error("betaInc: x out of [0,1]");
+  if (x === 0) return 0;
+  if (x === 1) return 1;
+  const lbeta = logGamma(a) + logGamma(b) - logGamma(a + b);
+  const front = Math.exp(Math.log(x) * a + Math.log(1 - x) * b - lbeta) / a;
+  if (x < (a + 1) / (a + b + 2)) return front * betaCF(a, b, x);
+  return 1 - Math.exp(Math.log(1 - x) * b + Math.log(x) * a - lbeta) / b * betaCF(b, a, 1 - x);
+}
+
+// ---- Beta inverse CDF (Newton-Raphson) ----
+function betaInv(p, a, b) {
+  if (p <= 0) return 0;
+  if (p >= 1) return 1;
+  const lbeta = logGamma(a) + logGamma(b) - logGamma(a + b);
+  let x = a / (a + b);
+  for (let i = 0; i < 100; i++) {
+    const err = betaInc(a, b, x) - p;
+    if (Math.abs(err) < 1e-12) break;
+    const pdf = Math.exp((a - 1) * Math.log(x) + (b - 1) * Math.log(1 - x) - lbeta);
+    if (pdf < 1e-300) break;
+    x -= err / pdf;
+    x = Math.max(1e-12, Math.min(1 - 1e-12, x));
+  }
+  return x;
+}
+
+// ---- PERT distribution ----
+function pertInv(p, min, likely, max, lambda) {
+  lambda = lambda || 4;
+  if (min === max) return min;
+  const range = max - min;
+  const a1 = 1 + lambda * (likely - min) / range;
+  const a2 = 1 + lambda * (max - likely) / range;
+  return min + range * betaInv(p, a1, a2);
+}
+
+function pertMean(min, likely, max, lambda) {
+  lambda = lambda || 4;
+  return (min + lambda * likely + max) / (lambda + 2);
+}
+
+function pertSD(min, likely, max, lambda) {
+  lambda = lambda || 4;
+  const mu = pertMean(min, likely, max, lambda);
+  const range = max - min;
+  return range * Math.sqrt((mu - min) * (max - mu)) / ((lambda + 2) * Math.sqrt(lambda + 3));
+}
+
+// ---- Latin Hypercube Sampling ----
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function latinHypercube(n, dims) {
+  const result = Array.from({length: n}, () => new Array(dims).fill(0));
+  for (let d = 0; d < dims; d++) {
+    const col = Array.from({length: n}, (_, i) => (i + Math.random()) / n);
+    shuffle(col);
+    for (let i = 0; i < n; i++) result[i][d] = col[i];
+  }
+  return result;
+}
+
+// ---- Ranks ----
+function ranks(arr) {
+  const n = arr.length;
+  const idx = Array.from({length: n}, (_, i) => i).sort((a, b) => arr[a] - arr[b]);
+  const r = new Array(n);
+  for (let i = 0; i < n; i++) r[idx[i]] = i + 1;
+  return r;
+}
+
+// ---- Cholesky decomposition ----
+function cholesky(C) {
+  const n = C.length;
+  const L = Array.from({length: n}, () => new Array(n).fill(0));
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j <= i; j++) {
+      let s = 0;
+      for (let k = 0; k < j; k++) s += L[i][k] * L[j][k];
+      if (i === j) {
+        const v = C[i][i] - s;
+        L[i][j] = v > 0 ? Math.sqrt(v) : 0;
+      } else {
+        L[i][j] = L[j][j] > 0 ? (C[i][j] - s) / L[j][j] : 0;
+      }
+    }
+  }
+  return L;
+}
+
+// ---- Nearest PSD (Jacobi eigenvalue decomposition) ----
+function nearestPSD(C) {
+  const n = C.length;
+  const S = Array.from({length: n}, (_, i) => Array.from({length: n}, (_, j) => (C[i][j] + C[j][i]) / 2));
+  const eps = 1e-10, maxIter = 1000;
+  let A = S.map(r => [...r]);
+  let V = Array.from({length: n}, (_, i) => Array.from({length: n}, (_, j) => i === j ? 1 : 0));
+  for (let iter = 0; iter < maxIter; iter++) {
+    let p = 0, q = 1, maxVal = 0;
+    for (let i = 0; i < n; i++)
+      for (let j = i + 1; j < n; j++)
+        if (Math.abs(A[i][j]) > maxVal) { maxVal = Math.abs(A[i][j]); p = i; q = j; }
+    if (maxVal < eps) break;
+    const theta = A[p][p] === A[q][q] ? Math.PI / 4 : 0.5 * Math.atan2(2 * A[p][q], A[p][p] - A[q][q]);
+    const cs = Math.cos(theta), sn = Math.sin(theta);
+    const newA = A.map(r => [...r]);
+    for (let i = 0; i < n; i++) {
+      newA[i][p] = cs * A[i][p] + sn * A[i][q];
+      newA[i][q] = -sn * A[i][p] + cs * A[i][q];
+    }
+    for (let i = 0; i < n; i++) {
+      newA[p][i] = cs * A[p][i] + sn * A[q][i];
+      newA[q][i] = -sn * A[p][i] + cs * A[q][i];
+    }
+    newA[p][p] = cs*cs*A[p][p] + 2*cs*sn*A[p][q] + sn*sn*A[q][q];
+    newA[q][q] = sn*sn*A[p][p] - 2*cs*sn*A[p][q] + cs*cs*A[q][q];
+    newA[p][q] = newA[q][p] = 0;
+    A = newA;
+    for (let i = 0; i < n; i++) {
+      const vip = V[i][p], viq = V[i][q];
+      V[i][p] = cs * vip + sn * viq;
+      V[i][q] = -sn * vip + cs * viq;
+    }
+  }
+  const lambda = A.map((r, i) => Math.max(r[i], 1e-8));
+  const R = Array.from({length: n}, () => new Array(n).fill(0));
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < n; j++)
+      for (let k = 0; k < n; k++)
+        R[i][j] += V[i][k] * lambda[k] * V[j][k];
+  const d = Array.from({length: n}, (_, i) => Math.sqrt(R[i][i] || 1));
+  for (let i = 0; i < n; i++)
+    for (let j = 0; j < n; j++)
+      R[i][j] /= d[i] * d[j];
+  return R;
+}
+
+// ---- Pearson correlation ----
+function pearson(x, y) {
+  const n = x.length;
+  const mx = x.reduce((a, v) => a + v, 0) / n;
+  const my = y.reduce((a, v) => a + v, 0) / n;
+  let sxy = 0, sx2 = 0, sy2 = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = x[i] - mx, dy = y[i] - my;
+    sxy += dx * dy; sx2 += dx * dx; sy2 += dy * dy;
+  }
+  const d = Math.sqrt(sx2 * sy2);
+  return d < 1e-12 ? 0 : Math.max(-1, Math.min(1, sxy / d));
+}
+
+function spearman(x, y) { return pearson(ranks(x), ranks(y)); }
+
+// ---- Iman-Conover correlation induction ----
+function imanConover(pertSamples, lhsUniforms, C) {
+  const n = pertSamples.length, k = pertSamples[0].length;
+  const Z = lhsUniforms.map(row => row.map(u => normalInv(Math.max(1e-9, Math.min(1 - 1e-9, u)))));
+  const psd = nearestPSD(C);
+  const L = cholesky(psd);
+  const Zc = Array.from({length: n}, () => new Array(k).fill(0));
+  for (let i = 0; i < n; i++)
+    for (let col = 0; col < k; col++)
+      for (let j = 0; j <= col; j++)
+        Zc[i][col] += Z[i][j] * L[col][j];
+  const result = Array.from({length: n}, () => new Array(k).fill(0));
+  for (let d = 0; d < k; d++) {
+    const zcCol = Array.from({length: n}, (_, i) => Zc[i][d]);
+    const zcRanks = ranks(zcCol);
+    const pertCol = Array.from({length: n}, (_, i) => pertSamples[i][d]);
+    const sortedPert = [...pertCol].sort((a, b) => a - b);
+    for (let i = 0; i < n; i++) result[i][d] = sortedPert[zcRanks[i] - 1];
+  }
+  return result;
+}
+
+// ---- Statistics ----
+function pctile(sorted, p) {
+  const n = sorted.length;
+  const h = (n - 1) * p / 100;
+  const lo = Math.floor(h), hi = Math.ceil(h);
+  return sorted[lo] + (sorted[hi] - sorted[lo]) * (h - lo);
+}
+
+function computeStats(col) {
+  const n = col.length;
+  const sorted = [...col].sort((a, b) => a - b);
+  const mean = col.reduce((a, v) => a + v, 0) / n;
+  const variance = col.reduce((a, v) => a + (v - mean) ** 2, 0) / (n - 1);
+  const sd = Math.sqrt(variance);
+  const m3 = col.reduce((a, v) => a + (v - mean) ** 3, 0) / n;
+  const skew = sd > 0 ? m3 / sd ** 3 : 0;
+  const pcts = [5, 10, 25, 50, 75, 90, 95].map(p => ({p, v: pctile(sorted, p)}));
+  return {mean, sd, median: pctile(sorted, 50), min: sorted[0], max: sorted[n - 1], skew, pcts, sorted, n};
+}
+
+function computeHistogram(col, numBins) {
+  numBins = numBins || 20;
+  const sorted = [...col].sort((a, b) => a - b);
+  const min = sorted[0], max = sorted[sorted.length - 1];
+  if (min === max) return [{lo: min, hi: max, count: col.length}];
+  const binW = (max - min) / numBins;
+  const bins = Array.from({length: numBins}, (_, i) => ({lo: min + i * binW, hi: min + (i + 1) * binW, count: 0}));
+  for (const v of col) {
+    const idx = Math.min(Math.floor((v - min) / binW), numBins - 1);
+    bins[idx].count++;
+  }
+  return bins;
+}
+
+// ---- Full simulation ----
+function runSimulation(variables, corrMatrix, numSims) {
+  const k = variables.length, n = numSims;
+  const t0 = Date.now();
+  const lhs = latinHypercube(n, k);
+  const pertSamples = Array.from({length: n}, () => new Array(k).fill(0));
+  for (let d = 0; d < k; d++) {
+    const v = variables[d];
+    if (v.min === v.max) { for (let i = 0; i < n; i++) pertSamples[i][d] = v.min; continue; }
+    for (let i = 0; i < n; i++) pertSamples[i][d] = pertInv(lhs[i][d], v.min, v.likely, v.max, v.lambda);
+  }
+  const isIdentity = corrMatrix.every((row, i) => row.every((v, j) => Math.abs(v - (i === j ? 1 : 0)) < 1e-9));
+  const samples = isIdentity ? pertSamples : imanConover(pertSamples, lhs, corrMatrix);
+  const results = variables.map((v, d) => {
+    const col = Array.from({length: n}, (_, i) => samples[i][d]);
+    return {name: v.name, ...computeStats(col), histogram: computeHistogram(col), col};
+  });
+  const cols = variables.map((_, d) => Array.from({length: n}, (_, i) => samples[i][d]));
+  const spearmanMatrix = variables.map((_, i) => variables.map((_, j) => spearman(cols[i], cols[j])));
+  return {results, spearmanMatrix, numSims: n, durationMs: Date.now() - t0, rawSamples: samples};
+}
+
+// =============================================================================
+//  APPLICATION STATE
+// =============================================================================
+
+let simVars = [
+  {name: "Revenue Growth (%)",    min: -2, likely: 12, max: 30, lambda: 4},
+  {name: "Operating Margin (%)",  min:  8, likely: 18, max: 32, lambda: 4},
+  {name: "Return on Capital (%)", min:  8, likely: 14, max: 28, lambda: 4},
+  {name: "Discount Rate (%)",     min:  6, likely:  9, max: 14, lambda: 4},
+  {name: "Years High Growth",     min:  3, likely:  8, max: 15, lambda: 4},
+];
+
+const DEFAULT_CORR = [
+  [ 1.00,  0.35,  0.50,  0.20,  0.55],
+  [ 0.35,  1.00,  0.65, -0.20,  0.30],
+  [ 0.50,  0.65,  1.00, -0.25,  0.40],
+  [ 0.20, -0.20, -0.25,  1.00, -0.15],
+  [ 0.55,  0.30,  0.40, -0.15,  1.00],
+];
+
+let simCorr = DEFAULT_CORR.map(r => [...r]);
+let lastSimResult = null;
+let addVarFormVisible = false;
+
+// =============================================================================
+//  UI SETUP
+// =============================================================================
+
+function setupUI() {
+  renderVarList();
+  renderCorrMatrix();
+  document.getElementById("sim-stats").innerHTML =
+    '<p class="info-box">Run a simulation to see results here.</p>';
+}
+
+function showMainTab(id, btn) {
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  btn.classList.add("active");
+}
+
+function syncSims(val, from) {
+  const n = Math.max(100, Math.min(10000, parseInt(val) || 1000));
+  if (from !== "slider") document.getElementById("num-sims-slider").value = n;
+  if (from !== "input") document.getElementById("num-sims").value = n;
+}
+
+// =============================================================================
+//  VARIABLE MANAGEMENT
+// =============================================================================
+
+function renderVarList() {
+  const container = document.getElementById("var-list");
+  if (simVars.length === 0) {
+    container.innerHTML = '<p style="color:#aaa;font-size:0.78rem;margin-bottom:8px;">No variables. Click Add Variable to start.</p>';
+    return;
+  }
+  container.innerHTML = simVars.map((v, i) => `
+    <div class="var-card">
+      <div class="var-card-header">
+        <strong>${escHtml(v.name)}</strong>
+        <button class="remove-btn" onclick="removeVar(${i})" title="Remove variable">&#10005;</button>
+      </div>
+      <div class="form-grid">
+        <div>
+          <label>Min</label>
+          <input type="number" value="${v.min}" onchange="updateVar(${i},'min',parseFloat(this.value))" />
+        </div>
+        <div>
+          <label>Likely (Mode)</label>
+          <input type="number" value="${v.likely}" onchange="updateVar(${i},'likely',parseFloat(this.value))" />
+        </div>
+        <div>
+          <label>Max</label>
+          <input type="number" value="${v.max}" onchange="updateVar(${i},'max',parseFloat(this.value))" />
+        </div>
+        <div>
+          <label>&#955; (Lambda)</label>
+          <input type="number" value="${v.lambda}" min="1" max="20" step="0.5"
+            onchange="updateVar(${i},'lambda',parseFloat(this.value))" />
+        </div>
+      </div>
+      <div class="var-meta">
+        PERT mean = ${pertMean(v.min, v.likely, v.max, v.lambda).toFixed(3)},
+        SD = ${pertSD(v.min, v.likely, v.max, v.lambda).toFixed(3)}
+      </div>
+    </div>
+  `).join("");
+  updateChartSelects();
+}
+
+function showAddVarForm() {
+  if (addVarFormVisible) { hideAddVarForm(); return; }
+  addVarFormVisible = true;
+  document.getElementById("add-var-form-container").innerHTML = `
+    <div class="add-var-form">
+      <h3>New Variable</h3>
+      <div class="form-grid">
+        <div style="grid-column:1/-1;">
+          <label>Name</label>
+          <input type="text" id="av-name" placeholder="e.g. Revenue Growth (%)" />
+        </div>
+        <div><label>Min</label><input type="number" id="av-min" value="0" /></div>
+        <div><label>Likely (Mode)</label><input type="number" id="av-likely" value="50" /></div>
+        <div><label>Max</label><input type="number" id="av-max" value="100" /></div>
+        <div><label>&#955; (Lambda)</label><input type="number" id="av-lambda" value="4" min="1" max="20" step="0.5" /></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn btn-primary" onclick="confirmAddVar()">Add</button>
+        <button class="btn btn-secondary" onclick="hideAddVarForm()">Cancel</button>
+      </div>
+    </div>
+  `;
+}
+
+function hideAddVarForm() {
+  addVarFormVisible = false;
+  document.getElementById("add-var-form-container").innerHTML = "";
+}
+
+function confirmAddVar() {
+  const name = (document.getElementById("av-name").value || "").trim();
+  if (!name) { toast("Please enter a variable name.", "error"); return; }
+  const v = {
+    name,
+    min:    parseFloat(document.getElementById("av-min").value) || 0,
+    likely: parseFloat(document.getElementById("av-likely").value) || 50,
+    max:    parseFloat(document.getElementById("av-max").value) || 100,
+    lambda: parseFloat(document.getElementById("av-lambda").value) || 4,
+  };
+  if (v.min >= v.max) { toast("Min must be less than Max.", "error"); return; }
+  if (v.likely < v.min || v.likely > v.max) { toast("Likely must be between Min and Max.", "error"); return; }
+  const oldN = simVars.length;
+  simVars.push(v);
+  // Expand correlation matrix
+  simCorr = simVars.map((_, i) => simVars.map((_, j) => {
+    if (i === j) return 1;
+    if (i < oldN && j < oldN) return simCorr[i][j];
+    return 0;
+  }));
+  hideAddVarForm();
+  renderVarList();
+  renderCorrMatrix();
+  toast(`Added: ${name}`);
+}
+
+function removeVar(i) {
+  const name = simVars[i].name;
+  simVars.splice(i, 1);
+  simCorr = simVars.map((_, ii) => simVars.map((_, jj) => {
+    const oi = ii >= i ? ii + 1 : ii;
+    const oj = jj >= i ? jj + 1 : jj;
+    return oi === oj ? 1 : (simCorr[oi] ? (simCorr[oi][oj] || 0) : 0);
+  }));
+  renderVarList();
+  renderCorrMatrix();
+  toast(`Removed: ${name}`);
+}
+
+function updateVar(i, field, val) {
+  simVars[i][field] = val;
+  renderVarList();
+}
+
+// ---- Import variables from Excel selection ----
+async function importFromExcel() {
+  if (!officeReady) { toast("Open in Excel to use this feature.", "error"); return; }
+  try {
+    await Excel.run(async (context) => {
+      const range = context.workbook.getSelectedRange();
+      range.load("values");
+      await context.sync();
+      const values = range.values;
+      if (!values || values.length < 2) {
+        toast("Select at least 2 rows (header + 1 variable).", "error");
+        return;
+      }
+      const newVars = [];
+      for (let i = 1; i < values.length; i++) {
+        const row = values[i];
+        if (!row[0]) continue;
+        const v = {
+          name:   String(row[0]),
+          min:    parseFloat(row[1]) || 0,
+          likely: parseFloat(row[2]) || 50,
+          max:    parseFloat(row[3]) || 100,
+          lambda: parseFloat(row[4]) || 4,
+        };
+        if (v.min < v.max) newVars.push(v);
+      }
+      if (newVars.length === 0) { toast("No valid rows found (need: Name, Min, Likely, Max, Lambda).", "error"); return; }
+      simVars = newVars;
+      simCorr = simVars.map((_, i) => simVars.map((_, j) => i === j ? 1 : 0));
+      renderVarList();
+      renderCorrMatrix();
+      toast(`Imported ${newVars.length} variable(s) from Excel.`, "success");
+    });
+  } catch (e) {
+    toast("Import failed: " + e.message, "error");
+  }
+}
+
+function updateChartSelects() {
+  const names = simVars.map(v => v.name);
+  ["chart-var-select", "price-var-select"].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = names.map((n, i) => `<option value="${i}">${escHtml(n)}</option>`).join("");
+  });
+}
+
+// =============================================================================
+//  CORRELATION MATRIX
+// =============================================================================
+
+function cellColor(v) {
+  if (Math.abs(v) < 0.05) return "#fff";
+  if (v > 0) return `rgba(0,120,212,${v * 0.3})`;
+  return `rgba(200,0,0,${-v * 0.3})`;
+}
+
+function renderCorrMatrix() {
+  const n = simVars.length;
+  const container = document.getElementById("corr-matrix-container");
+  if (n === 0) {
+    container.innerHTML = "<p style='color:#aaa;font-size:0.78rem;'>Add variables to see the correlation matrix.</p>";
+    return;
+  }
+  const names = simVars.map(v => v.name);
+  let html = `<table class="corr-table"><thead><tr><th></th>`;
+  names.forEach(n => { html += `<th title="${escHtml(n)}">${escHtml(n.length > 10 ? n.substring(0,10)+'…' : n)}</th>`; });
+  html += "</tr></thead><tbody>";
+  for (let i = 0; i < n; i++) {
+    html += `<tr><th title="${escHtml(names[i])}">${escHtml(names[i].length > 10 ? names[i].substring(0,10)+'…' : names[i])}</th>`;
+    for (let j = 0; j < n; j++) {
+      const v = simCorr[i][j];
+      const bg = i === j ? "#f0f7ff" : cellColor(v);
+      const disabled = i === j ? "disabled" : "";
+      html += `<td style="background:${bg};padding:2px;">
+        <input type="number" min="-1" max="1" step="0.05" value="${v.toFixed(2)}" ${disabled}
+          style="width:54px;border:none;background:transparent;text-align:center;font-size:0.72rem;"
+          onchange="updateCorr(${i},${j},parseFloat(this.value))" />
+      </td>`;
+    }
+    html += "</tr>";
+  }
+  html += "</tbody></table>";
+  container.innerHTML = html;
+}
+
+function updateCorr(i, j, v) {
+  simCorr[i][j] = v;
+  simCorr[j][i] = v;
+  renderCorrMatrix();
+}
+
+function fixPSD() {
+  simCorr = nearestPSD(simCorr);
+  renderCorrMatrix();
+  document.getElementById("corr-status").textContent = "Correlation matrix fixed to nearest positive semi-definite.";
+  document.getElementById("corr-status").className = "status-msg status-ok";
+  toast("Correlation matrix fixed to nearest PSD.", "success");
+}
+
+function resetDefaultCorr() {
+  const n = simVars.length;
+  if (n === 5 && simVars.every((v, i) => v.name === [
+    "Revenue Growth (%)", "Operating Margin (%)", "Return on Capital (%)",
+    "Discount Rate (%)", "Years High Growth"][i])) {
+    simCorr = DEFAULT_CORR.map(r => [...r]);
+  } else {
+    simCorr = simVars.map((_, i) => simVars.map((_, j) => i === j ? 1 : 0));
+  }
+  renderCorrMatrix();
+  document.getElementById("corr-status").textContent = "Correlation matrix reset.";
+  document.getElementById("corr-status").className = "status-msg";
+  toast("Correlation matrix reset.");
+}
+
+// ---- Build correlation from historical data ----
+async function buildCorrFromHistorical() {
+  if (!officeReady) { toast("Open in Excel to use this feature.", "error"); return; }
+  try {
+    await Excel.run(async (context) => {
+      const range = context.workbook.getSelectedRange();
+      range.load("values");
+      await context.sync();
+      const values = range.values;
+      if (!values || values.length < 3) {
+        toast("Select a range with at least 3 rows (header + 2 data rows). Col 1 = dates, remaining cols = values.", "error");
+        return;
+      }
+      const header = values[0].slice(1); // variable names from row 1, cols 2+
+      const numVars = header.length;
+      if (numVars < 2) { toast("Need at least 2 variable columns.", "error"); return; }
+
+      // Extract data rows (skip header)
+      const data = values.slice(1).filter(row => row[0] !== null && row[0] !== "");
+      if (data.length < 2) { toast("Not enough data rows.", "error"); return; }
+
+      // Build columns (aligned — skip rows with any null in relevant cols)
+      const cols = Array.from({length: numVars}, () => []);
+      for (const row of data) {
+        let valid = true;
+        for (let c = 1; c <= numVars; c++) {
+          if (row[c] === null || row[c] === "" || isNaN(parseFloat(row[c]))) { valid = false; break; }
+        }
+        if (valid) {
+          for (let c = 0; c < numVars; c++) cols[c].push(parseFloat(row[c + 1]));
+        }
+      }
+      const minLen = Math.min(...cols.map(c => c.length));
+      if (minLen < 2) { toast("Not enough complete rows of data.", "error"); return; }
+      for (let c = 0; c < numVars; c++) cols[c] = cols[c].slice(0, minLen);
+
+      // Compute Pearson correlation matrix
+      const corrM = Array.from({length: numVars}, (_, i) =>
+        Array.from({length: numVars}, (_, j) => i === j ? 1 : pearson(cols[i], cols[j]))
+      );
+      const psd = nearestPSD(corrM);
+
+      // Show result and let user decide
+      const varNames = header.map(h => String(h));
+      let previewHtml = `<div style="font-size:0.75rem;color:#444;margin-top:10px;">
+        <strong>Historical correlations computed from ${minLen} data points:</strong>
+        <div style="overflow-x:auto;margin-top:6px;">
+        <table class="corr-table"><thead><tr><th></th>`;
+      varNames.forEach(n => { previewHtml += `<th>${escHtml(n.substring(0,8))}</th>`; });
+      previewHtml += "</tr></thead><tbody>";
+      for (let i = 0; i < numVars; i++) {
+        previewHtml += `<tr><th>${escHtml(varNames[i].substring(0,8))}</th>`;
+        for (let j = 0; j < numVars; j++) {
+          const v = psd[i][j];
+          previewHtml += `<td style="background:${cellColor(v)}">${v.toFixed(2)}</td>`;
+        }
+        previewHtml += "</tr>";
+      }
+      previewHtml += `</tbody></table></div>
+        <div style="margin-top:8px;display:flex;gap:8px;">
+          <button class="btn btn-primary" id="apply-hist-corr">Apply to Matrix</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('hist-corr-preview').remove()">Discard</button>
+        </div></div>`;
+
+      let prev = document.getElementById("hist-corr-preview");
+      if (prev) prev.remove();
+      const previewDiv = document.createElement("div");
+      previewDiv.id = "hist-corr-preview";
+      previewDiv.innerHTML = previewHtml;
+      document.getElementById("corr-matrix-container").after(previewDiv);
+
+      // Map to current simVars if names match, otherwise fill zeros
+      document.getElementById("apply-hist-corr").onclick = () => {
+        const newCorr = simVars.map((sv, i) => simVars.map((sv2, j) => {
+          if (i === j) return 1;
+          const hi = varNames.findIndex(n => n.toLowerCase().includes(sv.name.toLowerCase().substring(0, 5)));
+          const hj = varNames.findIndex(n => n.toLowerCase().includes(sv2.name.toLowerCase().substring(0, 5)));
+          if (hi >= 0 && hj >= 0) return psd[hi][hj];
+          return 0;
+        }));
+        simCorr = newCorr;
+        renderCorrMatrix();
+        previewDiv.remove();
+        toast("Historical correlations applied. Review and adjust as needed.", "success");
+      };
+    });
+  } catch (e) {
+    toast("Error reading historical data: " + e.message, "error");
+  }
+}
+
+// =============================================================================
+//  RUN SIMULATION
+// =============================================================================
+
+function runSim() {
+  if (simVars.length === 0) { toast("Add at least one variable.", "error"); return; }
+  const n = parseInt(document.getElementById("num-sims").value) || 1000;
+  const pw = document.getElementById("progress-wrap");
+  const pb = document.getElementById("progress-bar");
+  const status = document.getElementById("sim-status");
+  pw.style.display = "block";
+  pb.style.width = "5%";
+  status.textContent = `Running ${n.toLocaleString()} simulations…`;
+  status.className = "status-msg";
+  setTimeout(() => {
+    pb.style.width = "40%";
+    setTimeout(() => {
+      try {
+        const result = runSimulation(simVars, simCorr, n);
+        lastSimResult = result;
+        pb.style.width = "90%";
+        setTimeout(() => {
+          pb.style.width = "100%";
+          renderResults(result);
+          status.textContent = `Completed in ${result.durationMs}ms — ${n.toLocaleString()} simulations, ${simVars.length} variables`;
+          status.className = "status-msg status-ok";
+          if (officeReady) {
+            document.getElementById("write-excel-section").style.display = "block";
+          }
+          updateChartSelects();
+          setTimeout(() => { pw.style.display = "none"; pb.style.width = "0%"; }, 600);
+        }, 30);
+      } catch (e) {
+        pb.style.width = "0%";
+        pw.style.display = "none";
+        status.textContent = "Simulation error: " + e.message;
+        status.className = "status-msg status-err";
+        toast("Simulation failed: " + e.message, "error");
+      }
+    }, 20);
+  }, 10);
+}
+
+function renderResults(sim) {
+  const container = document.getElementById("sim-stats");
+  let html = "";
+  for (let d = 0; d < sim.results.length; d++) {
+    const r = sim.results[d];
+    const p5  = r.pcts.find(p => p.p === 5).v;
+    const p10 = r.pcts.find(p => p.p === 10).v;
+    const p25 = r.pcts.find(p => p.p === 25).v;
+    const p50 = r.pcts.find(p => p.p === 50).v;
+    const p75 = r.pcts.find(p => p.p === 75).v;
+    const p90 = r.pcts.find(p => p.p === 90).v;
+    const p95 = r.pcts.find(p => p.p === 95).v;
+    html += `<div class="card" style="margin-bottom:12px;">
+      <h2>${escHtml(r.name)}</h2>
+      <div class="stat-grid" style="margin-bottom:10px;">
+        <div class="stat-cell"><div class="stat-label">Mean</div><div class="stat-value">${r.mean.toFixed(2)}</div></div>
+        <div class="stat-cell"><div class="stat-label">Median (P50)</div><div class="stat-value">${r.median.toFixed(2)}</div></div>
+        <div class="stat-cell"><div class="stat-label">Std Dev</div><div class="stat-value">${r.sd.toFixed(2)}</div></div>
+        <div class="stat-cell"><div class="stat-label">Min</div><div class="stat-value">${r.min.toFixed(2)}</div></div>
+        <div class="stat-cell"><div class="stat-label">Max</div><div class="stat-value">${r.max.toFixed(2)}</div></div>
+        <div class="stat-cell"><div class="stat-label">Skewness</div><div class="stat-value">${r.skew.toFixed(3)}</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <div style="font-size:0.75rem;font-weight:600;color:#555;margin-bottom:4px;">Percentiles</div>
+          <table class="pct-table">
+            <thead><tr><th>Pct</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>P5</td><td>${p5.toFixed(2)}</td></tr>
+              <tr><td>P10</td><td>${p10.toFixed(2)}</td></tr>
+              <tr><td>P25</td><td>${p25.toFixed(2)}</td></tr>
+              <tr><td>P50</td><td>${p50.toFixed(2)}</td></tr>
+              <tr><td>P75</td><td>${p75.toFixed(2)}</td></tr>
+              <tr><td>P90</td><td>${p90.toFixed(2)}</td></tr>
+              <tr><td>P95</td><td>${p95.toFixed(2)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <div style="font-size:0.75rem;font-weight:600;color:#555;margin-bottom:4px;">Histogram (${r.histogram.length} bins)</div>
+          <div class="bar-chart">${renderHistogram(r.histogram)}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+  // Spearman output correlation matrix
+  if (sim.results.length > 1) {
+    html += `<div class="card">
+      <h2>Spearman Rank Correlations (Output)</h2>
+      <p style="font-size:0.73rem;color:#888;margin-bottom:8px;">How each variable's outcomes correlate with each other across simulations. High values indicate which inputs move together most.</p>
+      <div class="corr-wrap"><table class="corr-table"><thead><tr><th></th>`;
+    sim.results.forEach(r => { html += `<th title="${escHtml(r.name)}">${escHtml(r.name.substring(0,10))}</th>`; });
+    html += "</tr></thead><tbody>";
+    for (let i = 0; i < sim.results.length; i++) {
+      html += `<tr><th title="${escHtml(sim.results[i].name)}">${escHtml(sim.results[i].name.substring(0,10))}</th>`;
+      for (let j = 0; j < sim.results.length; j++) {
+        const v = sim.spearmanMatrix[i][j];
+        html += `<td style="background:${cellColor(v)}">${v.toFixed(3)}</td>`;
+      }
+      html += "</tr>";
+    }
+    html += "</tbody></table></div></div>";
+  }
+  container.innerHTML = html;
+}
+
+function renderHistogram(bins) {
+  const maxCount = Math.max(...bins.map(b => b.count));
+  return bins.map(b => {
+    const pct = maxCount > 0 ? (b.count / maxCount * 100) : 0;
+    return `<div class="bar-row">
+      <div class="bar-label">${b.lo.toFixed(1)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+      <div class="bar-val">${b.count}</div>
+    </div>`;
+  }).join("");
+}
+
+// =============================================================================
+//  WRITE RESULTS TO EXCEL
+// =============================================================================
+
+async function writeResultsToExcel() {
+  if (!officeReady) { toast("Open in Excel to use this feature.", "error"); return; }
+  if (!lastSimResult) { toast("Run a simulation first.", "error"); return; }
+  const sheetName = (document.getElementById("sheet-name").value || "MC_Results").trim();
+  const sim = lastSimResult;
+  try {
+    toast("Writing to Excel…");
+    await Excel.run(async (context) => {
+      // Get or create sheet
+      let sheet;
+      try {
+        sheet = context.workbook.worksheets.getItem(sheetName);
+        sheet.getRange("A1:ZZ10000").clear();
+      } catch (_) {
+        sheet = context.workbook.worksheets.add(sheetName);
+      }
+      await context.sync();
+
+      let row = 0;
+
+      // Header
+      sheet.getRange(`A${row+1}`).values = [[`Monte Carlo Results — ${new Date().toLocaleDateString()} — ${sim.numSims.toLocaleString()} simulations`]];
+      row += 2;
+
+      // Statistics table
+      sheet.getRange(`A${row+1}`).values = [["STATISTICS SUMMARY"]];
+      row++;
+      const statHeaders = [["Variable","Mean","Median","Std Dev","Min","Max","Skewness","P5","P10","P25","P50","P75","P90","P95"]];
+      sheet.getRange(`A${row+1}:N${row+1}`).values = statHeaders;
+      row++;
+      for (const r of sim.results) {
+        const pcts = {};
+        r.pcts.forEach(p => { pcts[p.p] = p.v; });
+        sheet.getRange(`A${row+1}:N${row+1}`).values = [[
+          r.name, r.mean, r.median, r.sd, r.min, r.max, r.skew,
+          pcts[5]||"", pcts[10]||"", pcts[25]||"", pcts[50]||"", pcts[75]||"", pcts[90]||"", pcts[95]||""
+        ]];
+        row++;
+      }
+      await context.sync();
+      row++;
+
+      // Spearman matrix
+      if (sim.results.length > 1) {
+        sheet.getRange(`A${row+1}`).values = [["SPEARMAN RANK CORRELATIONS (OUTPUT)"]];
+        row++;
+        const names = sim.results.map(r => r.name);
+        sheet.getRange(`A${row+1}:${colLetter(names.length+1)}${row+1}`).values = [["", ...names]];
+        row++;
+        for (let i = 0; i < sim.results.length; i++) {
+          const rowData = [sim.results[i].name, ...sim.spearmanMatrix[i].map(v => Math.round(v*1000)/1000)];
+          sheet.getRange(`A${row+1}:${colLetter(rowData.length)}${row+1}`).values = [rowData];
+          row++;
+        }
+        await context.sync();
+        row++;
+      }
+
+      // Raw simulation data — write in 500-row chunks
+      sheet.getRange(`A${row+1}`).values = [["RAW SIMULATION DATA (each row = one simulation)"]];
+      row++;
+      const rawHeader = [sim.results.map(r => r.name)];
+      sheet.getRange(`A${row+1}:${colLetter(sim.results.length)}${row+1}`).values = rawHeader;
+      row++;
+      const CHUNK = 500;
+      for (let start = 0; start < sim.numSims; start += CHUNK) {
+        const end = Math.min(start + CHUNK, sim.numSims);
+        const chunk = [];
+        for (let i = start; i < end; i++) {
+          chunk.push(sim.results.map(r => Math.round(r.col[i]*10000)/10000));
+        }
+        sheet.getRange(`A${row+1}:${colLetter(sim.results.length)}${row+end-start}`).values = chunk;
+        row += end - start;
+        await context.sync();
+      }
+
+      sheet.activate();
+      await context.sync();
+    });
+    toast(`Results written to sheet "${sheetName}" successfully.`, "success");
+  } catch (e) {
+    toast("Write failed: " + e.message, "error");
+  }
+}
+
+function colLetter(n) {
+  // Convert 1-based column number to Excel letter (A, B, ..., Z, AA, ...)
+  let s = "";
+  while (n > 0) {
+    n--;
+    s = String.fromCharCode(65 + (n % 26)) + s;
+    n = Math.floor(n / 26);
+  }
+  return s;
+}
+
+// =============================================================================
+//  CHART CREATION
+// =============================================================================
+
+async function createHistogramChart() {
+  if (!officeReady) { toast("Open in Excel to use chart features.", "error"); return; }
+  if (!lastSimResult) { toast("Run a simulation first.", "error"); return; }
+  const varIdx = parseInt(document.getElementById("chart-var-select").value) || 0;
+  const r = lastSimResult.results[varIdx];
+  if (!r) { toast("Variable not found.", "error"); return; }
+  const bins = r.histogram;
+  try {
+    await Excel.run(async (context) => {
+      // Write histogram data to a temp sheet/range
+      let sheet;
+      try {
+        sheet = context.workbook.worksheets.getItem("MC_ChartData");
+        sheet.getRange("A1:C200").clear();
+      } catch (_) {
+        sheet = context.workbook.worksheets.add("MC_ChartData");
+      }
+      await context.sync();
+      sheet.getRange("A1:C1").values = [["BinLabel","BinMid","Count"]];
+      const binData = bins.map(b => [`${b.lo.toFixed(1)}-${b.hi.toFixed(1)}`, (b.lo+b.hi)/2, b.count]);
+      sheet.getRange(`A2:C${1+bins.length}`).values = binData;
+      await context.sync();
+      const dataRange = sheet.getRange(`A1:C${1+bins.length}`);
+      const charts = sheet.charts;
+      const chart = charts.add(Excel.ChartType.columnClustered, dataRange, Excel.ChartSeriesBy.columns);
+      chart.title.text = `${r.name} — Distribution`;
+      chart.legend.visible = false;
+      chart.setPosition("E1", "N20");
+      await context.sync();
+      sheet.activate();
+      await context.sync();
+    });
+    toast(`Histogram chart created for "${r.name}".`, "success");
+  } catch (e) {
+    toast("Chart failed: " + e.message, "error");
+  }
+}
+
+async function createPriceOverlay() {
+  if (!officeReady) { toast("Open in Excel to use chart features.", "error"); return; }
+  if (!lastSimResult) { toast("Run a simulation first.", "error"); return; }
+  const priceHistRange = document.getElementById("price-history-range").value.trim();
+  const currentPriceCell = document.getElementById("current-price-cell").value.trim();
+  const varIdx = parseInt(document.getElementById("price-var-select").value) || 0;
+  const r = lastSimResult.results[varIdx];
+  if (!priceHistRange || !currentPriceCell) {
+    toast("Enter the price history range and current price cell.", "error"); return;
+  }
+  try {
+    await Excel.run(async (context) => {
+      // Read current price
+      const cpRange = context.workbook.worksheets.getActiveWorksheet().getRange(currentPriceCell);
+      cpRange.load("values");
+      await context.sync();
+      const currentPrice = parseFloat(cpRange.values[0][0]) || 0;
+
+      // Read price history
+      const histRange = context.workbook.worksheets.getActiveWorksheet().getRange(priceHistRange);
+      histRange.load("values");
+      await context.sync();
+      const histValues = histRange.values;
+
+      // Prepare chart data sheet
+      let sheet;
+      try {
+        sheet = context.workbook.worksheets.getItem("MC_PriceCharts");
+        sheet.getRange("A1:Z500").clear();
+      } catch (_) {
+        sheet = context.workbook.worksheets.add("MC_PriceCharts");
+      }
+      await context.sync();
+
+      // Write price history data
+      sheet.getRange("A1:B1").values = [["Date","Price"]];
+      const histData = histValues.filter(row => row[0] !== null && row[0] !== "").map(row => [row[0], parseFloat(row[1]) || 0]);
+      if (histData.length > 0) {
+        sheet.getRange(`A2:B${1+histData.length}`).values = histData;
+      }
+      await context.sync();
+
+      // Write distribution histogram
+      const bins = r.histogram;
+      sheet.getRange("D1:F1").values = [["BinLabel","BinMid","Count"]];
+      const binData = bins.map(b => [`${b.lo.toFixed(2)}-${b.hi.toFixed(2)}`, (b.lo+b.hi)/2, b.count]);
+      sheet.getRange(`D2:F${1+bins.length}`).values = binData;
+      await context.sync();
+
+      // Create line chart (price history)
+      const histDataRange = sheet.getRange(`A1:B${1+histData.length}`);
+      const lineChart = sheet.charts.add(Excel.ChartType.line, histDataRange, Excel.ChartSeriesBy.columns);
+      lineChart.title.text = "Stock Price History";
+      lineChart.setPosition("A" + (histData.length + 4), "L" + (histData.length + 20));
+      await context.sync();
+
+      // Create bar chart (distribution) — horizontal bar
+      const distDataRange = sheet.getRange(`D1:F${1+bins.length}`);
+      const barChart = sheet.charts.add(Excel.ChartType.barClustered, distDataRange, Excel.ChartSeriesBy.columns);
+      barChart.title.text = `${r.name} Distribution (Current: ${currentPrice.toFixed(2)})`;
+      barChart.setPosition("M" + (histData.length + 4), "X" + (histData.length + 20));
+      await context.sync();
+
+      sheet.activate();
+      await context.sync();
+    });
+    toast("Price overlay charts created.", "success");
+  } catch (e) {
+    toast("Chart failed: " + e.message, "error");
+  }
+}
+
+// =============================================================================
+//  UTILITY FUNCTIONS
+// =============================================================================
+
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function toast(msg, type) {
+  const container = document.getElementById("toast-container");
+  const el = document.createElement("div");
+  el.className = "toast" + (type ? " " + type : "");
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => { el.style.opacity = "0"; el.style.transition = "opacity 0.3s"; }, 2800);
+  setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 3200);
+}
+
+</script>
+</body>
+</html>
