@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  ============================================================
+  Monte Carlo Simulator v1 — Office Add-in Manifest
+  ============================================================
+
+  BEFORE USING: Replace {{HOSTING_URL}} with your hosting URL.
+  Example: https://yourusername.github.io/mc-addin
+
+  Do a global find-and-replace on this file for {{HOSTING_URL}}.
+  Do NOT include a trailing slash in the URL.
+
+  After editing, sideload via:
+    Excel Desktop: Insert > Add-ins > Upload My Add-in > select this file
+  ============================================================
+-->
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+
+  <!-- Basic add-in metadata -->
+  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
+  <Version>1.0.0.0</Version>
+  <ProviderName>Monte Carlo Simulator</ProviderName>
+  <DefaultLocale>en-US</DefaultLocale>
+  <DisplayName DefaultValue="Monte Carlo Simulator v1" />
+  <Description DefaultValue="Professional Monte Carlo simulation engine with Latin Hypercube Sampling, PERT distributions, and Iman-Conover correlation induction for Excel." />
+  <IconUrl DefaultValue="{{HOSTING_URL}}/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="{{HOSTING_URL}}/assets/icon-80.png" />
+  <SupportUrl DefaultValue="{{HOSTING_URL}}" />
+  <AppDomains>
+    <AppDomain>{{HOSTING_URL}}</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Workbook" />
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="{{HOSTING_URL}}/taskpane.html" />
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Workbook">
+
+        <!-- Custom Functions registration -->
+        <AllFormFactors>
+          <ExtensionPoint xsi:type="CustomFunctions">
+            <Script>
+              <SourceLocation resid="Functions.Script.Url" />
+            </Script>
+            <Page>
+              <SourceLocation resid="Functions.Page.Url" />
+            </Page>
+            <Metadata>
+              <SourceLocation resid="Functions.Metadata.Url" />
+            </Metadata>
+            <Namespace resid="Functions.Namespace" />
+          </ExtensionPoint>
+        </AllFormFactors>
+
+        <!-- Desktop ribbon button -->
+        <DesktopFormFactor>
+          <GetStarted>
+            <Title resid="GetStarted.Title" />
+            <Description resid="GetStarted.Description" />
+            <LearnMoreUrl resid="GetStarted.LearnMoreUrl" />
+          </GetStarted>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="CommandsGroup">
+                <Label resid="CommandsGroup.Label" />
+                <Icon>
+                  <bt:Image size="16" resid="Icon.16x16" />
+                  <bt:Image size="32" resid="Icon.32x32" />
+                  <bt:Image size="80" resid="Icon.80x80" />
+                </Icon>
+                <Control xsi:type="Button" id="TaskpaneButton">
+                  <Label resid="TaskpaneButton.Label" />
+                  <Supertip>
+                    <Title resid="TaskpaneButton.Label" />
+                    <Description resid="TaskpaneButton.Tooltip" />
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="Icon.16x16" />
+                    <bt:Image size="32" resid="Icon.32x32" />
+                    <bt:Image size="80" resid="Icon.80x80" />
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>ButtonId1</TaskpaneId>
+                    <SourceLocation resid="Taskpane.Url" />
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+
+      </Host>
+    </Hosts>
+
+    <Resources>
+      <bt:Images>
+        <bt:Image id="Icon.16x16" DefaultValue="{{HOSTING_URL}}/assets/icon-16.png" />
+        <bt:Image id="Icon.32x32" DefaultValue="{{HOSTING_URL}}/assets/icon-32.png" />
+        <bt:Image id="Icon.80x80" DefaultValue="{{HOSTING_URL}}/assets/icon-80.png" />
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="GetStarted.LearnMoreUrl"    DefaultValue="{{HOSTING_URL}}/MANUAL.html" />
+        <bt:Url id="Functions.Script.Url"       DefaultValue="{{HOSTING_URL}}/functions.js" />
+        <bt:Url id="Functions.Metadata.Url"     DefaultValue="{{HOSTING_URL}}/functions-metadata.json" />
+        <bt:Url id="Functions.Page.Url"         DefaultValue="{{HOSTING_URL}}/functions.html" />
+        <bt:Url id="Taskpane.Url"               DefaultValue="{{HOSTING_URL}}/taskpane.html" />
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="GetStarted.Title"        DefaultValue="Monte Carlo Simulator v1 is ready!" />
+        <bt:String id="CommandsGroup.Label"     DefaultValue="Monte Carlo" />
+        <bt:String id="TaskpaneButton.Label"    DefaultValue="Monte Carlo Simulator" />
+        <bt:String id="Functions.Namespace"     DefaultValue="MC" />
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="GetStarted.Description"  DefaultValue="Open the Monte Carlo Simulator task pane to configure variables, run simulations, and write results to Excel." />
+        <bt:String id="TaskpaneButton.Tooltip"   DefaultValue="Open Monte Carlo Simulator. Run PERT-based Monte Carlo simulations with Latin Hypercube Sampling and Iman-Conover correlation induction." />
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
