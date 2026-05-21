@@ -4,10 +4,10 @@
   Monte Carlo Simulator v1 — Office Add-in Manifest
   ============================================================
 
-  BEFORE USING: Replace {{HOSTING_URL}} with your hosting URL.
+  BEFORE USING: Replace https://aubrey-bitly.github.io/MC-AddIn with your hosting URL.
   Example: https://yourusername.github.io/mc-addin
 
-  Do a global find-and-replace on this file for {{HOSTING_URL}}.
+  Do a global find-and-replace on this file for https://aubrey-bitly.github.io/MC-AddIn.
   Do NOT include a trailing slash in the URL.
 
   After editing, sideload via:
@@ -28,11 +28,11 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Monte Carlo Simulator v1" />
   <Description DefaultValue="Professional Monte Carlo simulation engine with Latin Hypercube Sampling, PERT distributions, and Iman-Conover correlation induction for Excel." />
-  <IconUrl DefaultValue="{{HOSTING_URL}}/assets/icon-32.png" />
-  <HighResolutionIconUrl DefaultValue="{{HOSTING_URL}}/assets/icon-80.png" />
-  <SupportUrl DefaultValue="{{HOSTING_URL}}" />
+  <IconUrl DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/assets/icon-32.png" />
+  <HighResolutionIconUrl DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/assets/icon-80.png" />
+  <SupportUrl DefaultValue="https://aubrey-bitly.github.io/MC-AddIn" />
   <AppDomains>
-    <AppDomain>{{HOSTING_URL}}</AppDomain>
+    <AppDomain>https://aubrey-bitly.github.io/MC-AddIn</AppDomain>
   </AppDomains>
 
   <Hosts>
@@ -40,7 +40,7 @@
   </Hosts>
 
   <DefaultSettings>
-    <SourceLocation DefaultValue="{{HOSTING_URL}}/taskpane.html" />
+    <SourceLocation DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/taskpane.html" />
   </DefaultSettings>
 
   <Permissions>ReadWriteDocument</Permissions>
@@ -107,16 +107,16 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="{{HOSTING_URL}}/assets/icon-16.png" />
-        <bt:Image id="Icon.32x32" DefaultValue="{{HOSTING_URL}}/assets/icon-32.png" />
-        <bt:Image id="Icon.80x80" DefaultValue="{{HOSTING_URL}}/assets/icon-80.png" />
+        <bt:Image id="Icon.16x16" DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/assets/icon-16.png" />
+        <bt:Image id="Icon.32x32" DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/assets/icon-32.png" />
+        <bt:Image id="Icon.80x80" DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/assets/icon-80.png" />
       </bt:Images>
       <bt:Urls>
-        <bt:Url id="GetStarted.LearnMoreUrl"    DefaultValue="{{HOSTING_URL}}/MANUAL.html" />
-        <bt:Url id="Functions.Script.Url"       DefaultValue="{{HOSTING_URL}}/functions.js" />
-        <bt:Url id="Functions.Metadata.Url"     DefaultValue="{{HOSTING_URL}}/functions-metadata.json" />
-        <bt:Url id="Functions.Page.Url"         DefaultValue="{{HOSTING_URL}}/functions.html" />
-        <bt:Url id="Taskpane.Url"               DefaultValue="{{HOSTING_URL}}/taskpane.html" />
+        <bt:Url id="GetStarted.LearnMoreUrl"    DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/MANUAL.html" />
+        <bt:Url id="Functions.Script.Url"       DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/functions.js" />
+        <bt:Url id="Functions.Metadata.Url"     DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/functions-metadata.json" />
+        <bt:Url id="Functions.Page.Url"         DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/functions.html" />
+        <bt:Url id="Taskpane.Url"               DefaultValue="https://aubrey-bitly.github.io/MC-AddIn/taskpane.html" />
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="GetStarted.Title"        DefaultValue="Monte Carlo Simulator v1 is ready!" />
