@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monte Carlo Simulator v1 — User Manual</title>
+  <style>
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      color: #222;
+      background: #f9f9f9;
+    }
+
+    /* ===== LAYOUT ===== */
+    .page-wrap { display: flex; min-height: 100vh; }
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #e0e0e0;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 24px 0;
+    }
+    .sidebar-logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid #eee;
+      margin-bottom: 16px;
+    }
+    .sidebar-logo h2 { font-size: 0.9rem; font-weight: 700; color: #0078d4; }
+    .sidebar-logo p { font-size: 0.72rem; color: #888; margin-top: 2px; }
+    .sidebar nav a {
+      display: block;
+      padding: 5px 20px;
+      font-size: 0.8rem;
+      color: #444;
+      text-decoration: none;
+      border-left: 3px solid transparent;
+    }
+    .sidebar nav a:hover { background: #f0f7ff; color: #0078d4; }
+    .sidebar nav a.active { border-left-color: #0078d4; color: #0078d4; background: #f0f7ff; font-weight: 600; }
+    .sidebar nav .section-label {
+      display: block;
+      padding: 12px 20px 4px;
+      font-size: 0.67rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #aaa;
+    }
+    .main-content { flex: 1; max-width: 860px; padding: 48px 56px; }
+
+    /* ===== TYPOGRAPHY ===== */
+    h1 { font-size: 2rem; font-weight: 700; color: #0078d4; margin-bottom: 8px; }
+    h2 { font-size: 1.35rem; font-weight: 700; color: #0064a8; margin: 48px 0 16px; padding-top: 48px; border-top: 2px solid #e8f4fd; }
+    h2:first-of-type { margin-top: 32px; padding-top: 0; border-top: none; }
+    h3 { font-size: 1.05rem; font-weight: 600; color: #333; margin: 28px 0 10px; }
+    h4 { font-size: 0.9rem; font-weight: 600; color: #555; margin: 20px 0 8px; }
+    p { margin-bottom: 14px; }
+    ul, ol { margin: 0 0 14px 24px; }
+    li { margin-bottom: 5px; }
+    strong { font-weight: 600; }
+    em { font-style: italic; }
+    a { color: #0078d4; }
+    a:hover { text-decoration: underline; }
+    code {
+      font-family: "SF Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+      font-size: 0.85em;
+      background: #f0f4f8;
+      border: 1px solid #e0e8f0;
+      border-radius: 3px;
+      padding: 1px 5px;
+      color: #0064a8;
+    }
+    pre {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border-radius: 6px;
+      padding: 16px 20px;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 0.83rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin: 12px 0 18px;
+    }
+    pre code { background: none; border: none; color: inherit; padding: 0; font-size: inherit; }
+    hr { border: none; border-top: 1px solid #eee; margin: 32px 0; }
+
+    /* ===== HERO ===== */
+    .hero {
+      background: linear-gradient(135deg, #0078d4 0%, #005fa3 100%);
+      color: white;
+      border-radius: 10px;
+      padding: 36px 40px;
+      margin-bottom: 40px;
+    }
+    .hero h1 { color: white; font-size: 1.8rem; margin-bottom: 8px; }
+    .hero p { color: rgba(255,255,255,0.88); font-size: 1rem; margin: 0; }
+    .hero .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.78rem;
+      margin-bottom: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ===== CALLOUT BOXES ===== */
+    .callout {
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+    .callout-info { background: #e8f4fd; border-left: 4px solid #0078d4; color: #004e8a; }
+    .callout-tip  { background: #f0fff4; border-left: 4px solid #217346; color: #1a5c38; }
+    .callout-warn { background: #fff4ce; border-left: 4px solid #d19800; color: #7a5900; }
+    .callout strong { display: block; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+
+    /* ===== STEP LISTS ===== */
+    .step-list { list-style: none; margin-left: 0; counter-reset: steps; }
+    .step-list li {
+      counter-increment: steps;
+      display: flex;
+      gap: 14px;
+      margin-bottom: 14px;
+      align-items: flex-start;
+    }
+    .step-list li::before {
+      content: counter(steps);
+      flex-shrink: 0;
+      width: 28px;
+      height: 28px;
+      background: #0078d4;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-top: 2px;
+    }
+
+    /* ===== TABLES ===== */
+    table { width: 100%; border-collapse: collapse; margin: 14px 0 20px; font-size: 0.88rem; }
+    th { background: #f0f7ff; color: #0064a8; font-weight: 600; padding: 8px 12px; text-align: left; border: 1px solid #ddeeff; }
+    td { padding: 7px 12px; border: 1px solid #e8e8e8; vertical-align: top; }
+    tr:nth-child(even) td { background: #f9f9f9; }
+
+    /* ===== PERT CURVE (CSS art) ===== */
+    .pert-diagram {
+      background: #f8fbff;
+      border: 1px solid #ddeeff;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 16px 0;
+      font-family: "SF Mono", Consolas, monospace;
+      font-size: 0.75rem;
+      color: #444;
+      line-height: 1.4;
+    }
+    .pert-diagram pre { background: none; color: #333; padding: 0; margin: 0; font-size: 0.75rem; }
+
+    /* ===== LAMBDA CARDS ===== */
+    .lambda-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+    .lambda-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 14px;
+      text-align: center;
+    }
+    .lambda-card .lval { font-size: 1.5rem; font-weight: 700; color: #0078d4; }
+    .lambda-card .ldesc { font-size: 0.78rem; color: #555; margin-top: 6px; }
+    .lambda-card .luse { font-size: 0.72rem; color: #888; margin-top: 4px; font-style: italic; }
+
+    /* ===== FUNCTION REFERENCE TABLE ===== */
+    .fn-table td:first-child { font-family: "SF Mono", Consolas, monospace; color: #0064a8; white-space: nowrap; }
+    .fn-table td:nth-child(3) { font-size: 0.82rem; color: #555; font-style: italic; }
+
+    /* ===== CORR COLOR KEY ===== */
+    .corr-key { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; font-size: 0.8rem; }
+    .corr-key-item { display: flex; align-items: center; gap: 6px; }
+    .corr-key-swatch { width: 24px; height: 16px; border-radius: 3px; border: 1px solid #ccc; }
+
+    /* ===== FAQ ===== */
+    .faq-item { margin-bottom: 20px; }
+    .faq-q { font-weight: 600; color: #0064a8; font-size: 0.95rem; margin-bottom: 6px; }
+    .faq-q::before { content: "Q: "; color: #0078d4; }
+
+    /* ===== DEPLOY METHOD CARDS ===== */
+    .method-card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin: 16px 0;
+    }
+    .method-card h3 { margin-top: 0; font-size: 1rem; display: flex; align-items: center; gap: 10px; }
+    .method-badge {
+      font-size: 0.68rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-free    { background: #e6f4ea; color: #1a7731; }
+    .badge-team    { background: #e8f0fe; color: #1a4db5; }
+    .badge-admin   { background: #fce8e6; color: #b53b2c; }
+    .badge-local   { background: #f0f0f0; color: #555; }
+
+    /* ===== PRINT ===== */
+    @media print {
+      .sidebar { display: none; }
+      .main-content { padding: 20px; max-width: 100%; }
+      h2 { page-break-before: always; }
+    }
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .main-content { padding: 24px 20px; }
+      .lambda-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- SIDEBAR NAV -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h2>Monte Carlo Simulator v1</h2>
+      <p>User Manual</p>
+    </div>
+    <nav>
+      <span class="section-label">Getting Started</span>
+      <a href="#intro">Introduction</a>
+      <a href="#install">Installation</a>
+      <a href="#quickstart">Quick Start (5 min)</a>
+
+      <span class="section-label">Using the Add-in</span>
+      <a href="#variables">Setting Up Variables</a>
+      <a href="#correlations">Correlations</a>
+      <a href="#running">Running a Simulation</a>
+      <a href="#results">Interpreting Results</a>
+
+      <span class="section-label">Reference</span>
+      <a href="#functions" id="nav-functions">Excel Functions (MC.*)</a>
+      <a href="#price-chart">Stock Price Overlay</a>
+      <a href="#riskamp">Replacing RiskAMP</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <div class="hero">
+      <div class="badge">Version 1.0 — Standalone Edition</div>
+      <h1>Monte Carlo Simulator v1</h1>
+      <p>Professional probability simulation for Excel — Latin Hypercube Sampling, PERT distributions, and Iman-Conover correlation. No install, no Node.js, no build tools required.</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <h2 id="intro">1. Introduction</h2>
+
+    <p>Monte Carlo simulation is a technique for understanding the range of possible outcomes in a complex model, especially when inputs are uncertain. Instead of plugging in a single "base case" number, you describe each input as a <strong>probability distribution</strong> — a range with a most likely value — and then run thousands of scenarios simultaneously.</p>
+
+    <h3>Why Monte Carlo instead of sensitivity analysis?</h3>
+    <p>Traditional sensitivity analysis changes one variable at a time and tells you "if revenue grows 5% faster, the outcome is X." This is useful but misses two things:</p>
+    <ul>
+      <li><strong>Combinations:</strong> What happens when revenue is high <em>and</em> margins are compressed? Monte Carlo explores all combinations simultaneously.</li>
+      <li><strong>Probability:</strong> Sensitivity analysis doesn't tell you <em>how likely</em> each scenario is. Monte Carlo gives you a full probability distribution of outcomes — P10, P50, P90 — so you can make risk-adjusted decisions.</li>
+    </ul>
+
+    <h3>What makes this add-in different?</h3>
+    <ul>
+      <li><strong>PERT distributions:</strong> Purpose-built for expert estimates with min/likely/max — the same format used in project management and DCF valuation.</li>
+      <li><strong>Latin Hypercube Sampling (LHS):</strong> Dramatically better coverage of the probability space than simple random sampling, for the same number of simulations.</li>
+      <li><strong>Iman-Conover correlation induction:</strong> Properly preserves correlations between variables without distorting their marginal distributions.</li>
+      <li><strong>No build tools required:</strong> Upload two HTML files and a JSON file to any HTTPS host. Done.</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2 id="install">2. Installation</h2>
+
+    <p>The add-in requires an HTTPS-hosted URL for the files. Choose the method that fits your situation.</p>
+
+    <div class="method-card">
+      <h3>Method A: GitHub Pages <span class="method-badge badge-free">Free — Recommended for testing</span></h3>
+      <p>GitHub Pages is a free static hosting service. You get a URL like <code>https://yourname.github.io/mc-addin</code> in under 5 minutes.</p>
+      <ol class="step-list">
+        <li><span>Create a free account at <a href="https://github.com" target="_blank">github.com</a> if you don't have one.</span></li>
+        <li><span>Click the <strong>+</strong> button → New repository. Name it <code>mc-addin</code>. Set it to <strong>Public</strong>. Click Create.</span></li>
+        <li><span>Upload all files from <code>dist-standalone/</code> to the repository root: drag-and-drop them in the web UI or use the "Add file" button.</span></li>
+        <li><span>Go to <strong>Settings → Pages → Source</strong>. Select "Deploy from branch", branch = <code>main</code>, folder = <code>/ (root)</code>. Click Save.</span></li>
+        <li><span>Wait ~60 seconds. GitHub shows your URL: <code>https://yourusername.github.io/mc-addin</code></span></li>
+        <li><span>Open <code>manifest.xml</code> in Notepad. Press <strong>Ctrl+H</strong> (Find &amp; Replace). Find: <code>{{HOSTING_URL}}</code> Replace with your GitHub Pages URL (no trailing slash). Replace All. Save.</span></li>
+        <li><span>In Excel Desktop: <strong>Insert → Add-ins → Upload My Add-in</strong> → Browse to your edited <code>manifest.xml</code> → Upload.</span></li>
+        <li><span>The "Monte Carlo" group appears in the Home ribbon. Click <strong>Monte Carlo Simulator</strong> to open the task pane.</span></li>
+      </ol>
+      <div class="callout callout-tip">
+        <strong>Tip</strong>
+        Also upload the <code>assets/</code> folder from the project for the ribbon icons, or the manifest will fall back to a default icon.
+      </div>
+    </div>
+
+    <div class="method-card">
+      <h3>Method B: SharePoint Add-in Catalog <span class="method-badge badge-team">Team — No IT admin needed</span></h3>
+      <p>If your organisation uses SharePoint Online, you can publish the add-in to a shared catalog. Team members install it themselves with one click — no IT involvement once the catalog exists.</p>
+      <ol class="step-list">
+        <li><span>Upload the <code>dist-standalone/</code> files to a SharePoint document library. Copy the base URL (e.g. <code>https://contoso.sharepoint.com/sites/tools/addin</code>).</span></li>
+        <li><span>Edit <code>manifest.xml</code>: replace <code>{{HOSTING_URL}}</code> with the SharePoint file URL base.</span></li>
+        <li><span>Go to your <strong>SharePoint Admin Center → Apps → App Catalog</strong>. If no catalog exists, create one (one-time setup).</span></li>
+        <li><span>In the catalog, open <strong>Apps for Office</strong> → Upload your edited <code>manifest.xml</code>.</span></li>
+        <li><span>Team members open Excel → <strong>Insert → Add-ins → My Organization</strong> tab → Monte Carlo Simulator → Add.</span></li>
+      </ol>
+    </div>
+
+    <div class="method-card">
+      <h3>Method C: Microsoft 365 Admin Center Centralized Deployment <span class="method-badge badge-admin">Company-wide — Requires IT admin</span></h3>
+      <p>IT deploys once; every user in the assigned group sees the add-in automatically — no action needed from individuals.</p>
+      <ol class="step-list">
+        <li><span>IT admin goes to <a href="https://admin.microsoft.com" target="_blank">admin.microsoft.com</a> → <strong>Settings → Integrated apps</strong>.</span></li>
+        <li><span>Click <strong>Upload custom apps</strong> → Office Add-in → Upload the manifest file.</span></li>
+        <li><span>Assign to specific users, groups, or the entire organisation.</span></li>
+        <li><span>Within 24 hours (usually much faster) the add-in appears in each user's Excel under <strong>Insert → Add-ins → Admin Managed</strong>.</span></li>
+      </ol>
+    </div>
+
+    <div class="method-card">
+      <h3>Method D: Local sideloading for testing <span class="method-badge badge-local">Single PC — Quick test only</span></h3>
+      <p>For testing on a single Windows PC without uploading to a server. Requires Node.js (one-time install, ~5 minutes).</p>
+      <ol class="step-list">
+        <li><span>Install <a href="https://nodejs.org" target="_blank">Node.js LTS</a> from nodejs.org.</span></li>
+        <li><span>Open Command Prompt in the project folder. Run: <code>npm install</code> then <code>npm start</code></span></li>
+        <li><span>The dev server starts at <code>https://localhost:3000</code>. Use the original <code>manifest.xml</code> (already points to localhost).</span></li>
+        <li><span>In Excel: <strong>Insert → Add-ins → Upload My Add-in</strong> → select <code>manifest.xml</code>.</span></li>
+      </ol>
+    </div>
+
+    <h3>Troubleshooting common installation errors</h3>
+    <table>
+      <thead><tr><th>Error message</th><th>Cause</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td>"Add-in can't be loaded"</td><td>Files not served over HTTPS, or URL mismatch</td><td>Confirm your hosting URL starts with <code>https://</code>. Verify the URL in manifest.xml matches exactly.</td></tr>
+        <tr><td>"=MC.PERT not recognised"</td><td>functions-metadata.json path wrong, or functions.js not loaded</td><td>Open the Functions.Metadata.Url in a browser — you should see JSON. Open Functions.Script.Url — you should see JavaScript. Both must return 200 OK.</td></tr>
+        <tr><td>"Error: not in Excel context"</td><td>taskpane.html opened directly in a browser</td><td>Normal — the task pane detects it's not in Excel and disables Excel-only buttons. To get full functionality, open it via the Excel add-in ribbon button.</td></tr>
+        <tr><td>Blank task pane</td><td>Office.js CDN blocked on corporate network</td><td>Check if <code>https://appsforoffice.microsoft.com</code> is reachable from the PC. May need a proxy exception.</td></tr>
+        <tr><td>Ribbon button missing</td><td>Add-in not fully loaded</td><td>Close and reopen Excel. Check Insert → Add-ins → My Add-ins to confirm it's installed.</td></tr>
+      </tbody>
+    </table>
+
+    <!-- ============================================================ -->
+    <h2 id="quickstart">3. Quick Start — A Complete Example in 5 Minutes</h2>
+
+    <p>The add-in comes pre-loaded with five DCF valuation driver variables. Here's how to run your first simulation:</p>
+
+    <ol class="step-list">
+      <li><span><strong>Open the task pane.</strong> Click <strong>Monte Carlo Simulator</strong> in the Home ribbon. The task pane opens on the right.</span></li>
+      <li><span><strong>Review the variables.</strong> On the Setup tab you'll see 5 variables: Revenue Growth, Operating Margin, Return on Capital, Discount Rate, Years High Growth. Each has a min, likely (mode), max, and lambda. Leave them at defaults for now.</span></li>
+      <li><span><strong>Set simulation count.</strong> The slider defaults to 1,000. Leave it there for a quick test.</span></li>
+      <li><span><strong>Check correlations.</strong> Click the Correlations tab. The matrix encodes economic relationships (e.g. Revenue Growth and Operating Margin have +0.35 correlation — companies with pricing power tend to have both). Leave defaults.</span></li>
+      <li><span><strong>Run.</strong> Click the Results tab → click <strong>Run Simulation</strong>. Results appear in ~1 second.</span></li>
+      <li><span><strong>Read the output.</strong> For each variable you see Mean, Median, SD, plus a P5–P95 percentile table and a histogram. The Spearman correlation matrix at the bottom shows which variables co-moved most across the 1,000 scenarios.</span></li>
+      <li><span><strong>Write to Excel.</strong> Click <strong>Write Results to Excel</strong>. A new sheet called <code>MC_Results</code> is created with the full statistics and all 1,000 raw rows.</span></li>
+    </ol>
+
+    <div class="callout callout-tip">
+      <strong>Next step</strong>
+      Replace the 5 default variables with your own model inputs. Click the X on any variable card to remove it, then click "Add Variable" to add yours.
+    </div>
+
+    <!-- ============================================================ -->
+    <h2 id="variables">4. Setting Up Variables</h2>
+
+    <h3>The PERT distribution</h3>
+    <p>PERT (Program Evaluation and Review Technique) was developed by the US Navy for project scheduling under uncertainty. It's perfect for expert estimates because it works with the three numbers analysts actually have: a pessimistic case, a realistic case, and an optimistic case.</p>
+
+    <div class="pert-diagram">
+<pre>
+  Probability
+  density
+     |
+     |              . Peak (most likely / mode)
+     |           .     .
+     |         .         .
+     |       .               .
+     |     .                     .
+     |   .                            .
+     | .                                    .
+     +---+----+----------+----------+----+-----> Value
+       Min  P10          P50        P90  Max
+
+  The curve is skewed when min and max are not equidistant from the mode.
+  Lambda controls how "peaked" the curve is around the mode.
+</pre>
+    </div>
+
+    <h3>Understanding Lambda (shape parameter)</h3>
+    <p>Lambda controls how much weight the PERT distribution gives to the most likely value relative to the extremes. The formula for the mean is:</p>
+    <p style="text-align:center; font-size:1.05rem; padding:12px; background:#f0f7ff; border-radius:6px; font-family:serif;">
+      Mean = (min + &lambda; &times; mode + max) / (&lambda; + 2)
+    </p>
+
+    <div class="lambda-grid">
+      <div class="lambda-card">
+        <div class="lval">&lambda; = 2</div>
+        <div class="ldesc">Flat, wide distribution. Extremes nearly as likely as the mode.</div>
+        <div class="luse">Use when: very uncertain, limited data, early-stage estimates</div>
+      </div>
+      <div class="lambda-card">
+        <div class="lval">&lambda; = 4</div>
+        <div class="ldesc">Standard PERT. Balanced weight between mode and extremes.</div>
+        <div class="luse">Use when: reasonable confidence, standard three-point estimate (default)</div>
+      </div>
+      <div class="lambda-card">
+        <div class="lval">&lambda; = 6</div>
+        <div class="ldesc">Peaked, concentrated around the mode. Low tail probability.</div>
+        <div class="luse">Use when: high conviction, mature business, data-driven estimate</div>
+      </div>
+    </div>
+
+    <h3>Importing variables from Excel</h3>
+    <p>If your model already has three-point estimates in a spreadsheet, you can import them directly:</p>
+    <ol>
+      <li>In Excel, create a table with columns: <strong>Name | Min | Likely | Max | Lambda</strong> (header row, then one variable per row)</li>
+      <li>Select the entire range including the header</li>
+      <li>In the Monte Carlo task pane → Setup tab → click <strong>Import from Excel Selection</strong></li>
+    </ol>
+
+    <h3>Tips for setting ranges</h3>
+    <ul>
+      <li><strong>Min and Max are not absolute limits</strong> — they represent your credible range, roughly equivalent to P2-P3 and P97-P98 of your subjective probability. The PERT distribution assigns near-zero probability at the boundaries.</li>
+      <li><strong>Likely is the mode</strong> (peak of the distribution), not the mean. For symmetric distributions they coincide; for skewed ones they don't.</li>
+      <li>If you're unsure about the range, err on the side of wider. Overconfidence (too narrow a range) is far more common than underconfidence in expert elicitation research.</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2 id="correlations">5. Correlations</h2>
+
+    <h3>What correlations do in simulations</h3>
+    <p>Without correlations, each simulation draws each variable independently. That means a scenario with Revenue Growth at the 95th percentile is equally likely to have Discount Rate at the 95th percentile as the 5th percentile. For many variables this is unrealistic — they move together.</p>
+    <p>For example: when a company is growing fast (high Revenue Growth), it often also has high margins (pricing power) and a longer competitive advantage period (Years High Growth). A simulation that ignores this will produce scenarios that are individually plausible but collectively impossible — "high growth, terrible margins, cheap capital" — and will understate the true tail risks.</p>
+
+    <h3>Reading the correlation matrix</h3>
+    <p>The matrix is colour-coded:</p>
+    <div class="corr-key">
+      <div class="corr-key-item"><div class="corr-key-swatch" style="background:rgba(0,120,212,0.3);"></div><span>Positive correlation (blue, darker = stronger)</span></div>
+      <div class="corr-key-item"><div class="corr-key-swatch" style="background:#fff;"></div><span>Near zero (white)</span></div>
+      <div class="corr-key-item"><div class="corr-key-swatch" style="background:rgba(200,0,0,0.3);"></div><span>Negative correlation (red, darker = stronger)</span></div>
+    </div>
+    <p>The diagonal is always 1 (a variable is perfectly correlated with itself). The matrix is symmetric — the value at row i, column j equals the value at row j, column i.</p>
+
+    <h3>Editing correlations manually</h3>
+    <p>Click any cell in the correlation matrix and type a new value between -1 and 1. The matrix automatically mirrors the entry (if you change row A, col B, then row B, col A updates too).</p>
+
+    <h3>The "Fix PSD" button</h3>
+    <p>A correlation matrix must be <em>positive semi-definite</em> (PSD) — this is a mathematical requirement that ensures the correlations are mutually consistent. For example, if A and B are each 90% correlated with C, they can't be -90% correlated with each other (that's geometrically impossible).</p>
+    <p>If you manually edit the matrix into an inconsistent state, the cells may turn red. Click <strong>Fix PSD</strong> to automatically find the nearest valid correlation matrix using Jacobi eigenvalue decomposition. The result is the closest PSD matrix to what you entered, with minimal changes.</p>
+    <p><strong>When to use it:</strong> Whenever you see a warning about invalid correlations, or when you've entered correlations from different sources (e.g. half from historical data, half from judgment) and want to make the combined matrix consistent.</p>
+
+    <h3>Building from historical data</h3>
+    <p>If you have a history of your input variables over time, you can compute the correlations directly from the data:</p>
+    <ol>
+      <li>In Excel, prepare a table with dates in column 1 and one variable per subsequent column, with a header row.</li>
+      <li>Select the entire range including header.</li>
+      <li>In the Monte Carlo task pane → Correlations tab → click <strong>Build from Historical Data</strong>.</li>
+      <li>A preview matrix appears. Click <strong>Apply to Matrix</strong> to use it, or <strong>Discard</strong> to keep the current matrix.</li>
+    </ol>
+
+    <div class="callout callout-warn">
+      <strong>Important: historical is a starting point, not a final answer</strong>
+      Historical correlations reflect the past sample period. If market conditions have changed, or if some correlations only emerge in stress scenarios not present in your data, you should apply judgment on top. A common workflow: compute historical, apply, then manually increase extreme correlations (near ±1) slightly toward zero and decrease mild correlations slightly toward zero to account for the "correlation breakdown" effect in tail events.
+    </div>
+
+    <!-- ============================================================ -->
+    <h2 id="running">6. Running a Simulation</h2>
+
+    <h3>Latin Hypercube Sampling (LHS) vs. simple random</h3>
+    <p>This add-in uses <strong>Latin Hypercube Sampling</strong> instead of naive random sampling (like Excel's <code>RAND()</code>). The difference matters significantly at small sample sizes.</p>
+    <p>In simple random sampling, you might by chance draw 5 consecutive values from the upper tail of a distribution and none from the lower tail. LHS prevents this by <strong>stratifying the probability space</strong>: it divides the [0,1] probability range into N equal intervals and draws exactly one sample from each interval, then shuffles. This guarantees every part of the distribution is represented.</p>
+    <table>
+      <thead><tr><th>Method</th><th>1,000 simulations</th><th>Tail accuracy (P5/P95)</th><th>Recommendation</th></tr></thead>
+      <tbody>
+        <tr><td>Simple random (RAND)</td><td>High variance between runs</td><td>Poor — tails undersampled</td><td>Avoid for professional work</td></tr>
+        <tr><td>Latin Hypercube (this add-in)</td><td>Low variance between runs</td><td>Good — every stratum covered</td><td>Default — 1,000 usually sufficient</td></tr>
+      </tbody>
+    </table>
+
+    <h3>How many simulations?</h3>
+    <ul>
+      <li><strong>500–1,000:</strong> Sufficient for P10–P90 estimates with LHS. Results are stable run-to-run.</li>
+      <li><strong>2,000–5,000:</strong> Recommended for P5/P95 and when you need stable Spearman correlations in the output.</li>
+      <li><strong>5,000–10,000:</strong> For final production outputs or when tail risk is the primary focus (P1/P99).</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2 id="results">7. Interpreting Results</h2>
+
+    <h3>The percentile table</h3>
+    <p>After running, each variable shows a percentile table from P5 to P95. Interpretation:</p>
+    <ul>
+      <li><strong>P10 = 5.2%</strong> means "there is a 10% probability that the value will be below 5.2%"</li>
+      <li><strong>P50 (median)</strong> is the central outcome — half of simulations fell above this, half below</li>
+      <li><strong>P90</strong> means "there is a 10% probability the value exceeds this" (upside tail)</li>
+    </ul>
+    <p>For investment decisions: a DCF value with P10 = $42 and P90 = $98 tells you more than a point estimate of $65 — you know there's a 10% chance the fair value is below $42, and a 10% chance it exceeds $98.</p>
+
+    <h3>Spearman rank correlations (output)</h3>
+    <p>The Spearman matrix in the results section shows how each input's simulated outcomes correlate with each other's outcomes across the N simulation runs. This is different from the input correlation matrix you set up:</p>
+    <ul>
+      <li>The <strong>input correlation matrix</strong> is what you specified — your beliefs about how the inputs move together.</li>
+      <li>The <strong>output Spearman matrix</strong> shows what actually happened in the simulations. If the Iman-Conover algorithm worked correctly, these should closely match your inputs.</li>
+    </ul>
+    <p>Use the output correlations as a sanity check: if a correlation you set to 0.7 shows up as 0.45 in the output, increase simulations or check if the input matrix is well-conditioned.</p>
+
+    <h3>Histogram shape and skewness</h3>
+    <ul>
+      <li><strong>Positive skewness (right tail):</strong> Most scenarios cluster at low values; a few outliers extend to the right. Common for revenue growth (downside is bounded, upside is not).</li>
+      <li><strong>Negative skewness (left tail):</strong> Most scenarios are comfortable, but there's a risk of large downside. Common for margins under competitive pressure.</li>
+      <li><strong>High skewness in a composite model:</strong> Can indicate that a small number of extreme input combinations are driving a fat tail in the output — worth investigating which variable combinations cause those outlier runs.</li>
+    </ul>
+
+    <!-- ============================================================ -->
+    <h2 id="functions">8. Excel Functions Reference</h2>
+    <a name="functions"></a>
+
+    <p>Once the add-in is installed, these functions are available in any Excel cell with the prefix <code>MC.</code>. They work like any built-in function — start typing <code>=MC.</code> and IntelliSense will suggest completions.</p>
+
+    <table class="fn-table">
+      <thead>
+        <tr><th>Function</th><th>Syntax</th><th>Description</th><th>Example</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>=MC.PERT</td>
+          <td>PERT(min, likely, max, lambda, percentile)</td>
+          <td>Value at given percentile (0–100) of PERT distribution</td>
+          <td><code>=MC.PERT(5, 15, 30, 4, 90)</code> → P90 of PERT(5,15,30)</td>
+        </tr>
+        <tr>
+          <td>=MC.PERTMEAN</td>
+          <td>PERTMEAN(min, likely, max, lambda)</td>
+          <td>Expected value (probability-weighted mean) of PERT distribution</td>
+          <td><code>=MC.PERTMEAN(5, 15, 30, 4)</code> → ≈ 15.83</td>
+        </tr>
+        <tr>
+          <td>=MC.PERTSD</td>
+          <td>PERTSD(min, likely, max, lambda)</td>
+          <td>Standard deviation of PERT distribution</td>
+          <td><code>=MC.PERTSD(5, 15, 30, 4)</code> → ≈ 4.17</td>
+        </tr>
+        <tr>
+          <td>=MC.NORMALINV</td>
+          <td>NORMALINV(probability)</td>
+          <td>Inverse standard normal CDF. Same as Excel's NORM.S.INV().</td>
+          <td><code>=MC.NORMALINV(0.975)</code> → ≈ 1.96</td>
+        </tr>
+        <tr>
+          <td>=MC.BETAINV</td>
+          <td>BETAINV(probability, alpha, beta)</td>
+          <td>Inverse Beta distribution CDF. Underlying math of PERT.</td>
+          <td><code>=MC.BETAINV(0.5, 2, 5)</code> → ≈ 0.284</td>
+        </tr>
+        <tr>
+          <td>=MC.SAMPLE</td>
+          <td>SAMPLE(min, likely, max, lambda)</td>
+          <td>Single random PERT sample. VOLATILE — recalculates on every change. For quick spot checks only.</td>
+          <td><code>=MC.SAMPLE(5, 15, 30, 4)</code> → random number in [5, 30]</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-warn">
+      <strong>Note on MC.SAMPLE</strong>
+      Because it is VOLATILE, every recalculation of any cell triggers a new random draw. This makes it unsuitable for building a reproducible model. Use the task pane's Run Simulation and Write to Excel workflow for production outputs.
+    </div>
+
+    <h3>Using MC.PERT in a sensitivity table</h3>
+    <p>You can use <code>=MC.PERT</code> to build a static percentile table in a spreadsheet cell range:</p>
+    <pre><code>A1: Revenue Growth %
+B1: P10   C1: P50   D1: P90
+B2: =MC.PERT($B$5, $C$5, $D$5, 4, 10)
+C2: =MC.PERT($B$5, $C$5, $D$5, 4, 50)
+D2: =MC.PERT($B$5, $C$5, $D$5, 4, 90)</code></pre>
+
+    <!-- ============================================================ -->
+    <h2 id="price-chart">9. Stock Price Overlay Chart</h2>
+
+    <p>The Charts tab lets you create a two-panel chart that combines a stock's price history with the simulated distribution of a valuation variable (e.g. simulated intrinsic value or price target).</p>
+
+    <h3>Setup</h3>
+    <ol>
+      <li>Run a simulation with at least one variable representing a price or value metric.</li>
+      <li>In your workbook, prepare a range with dates in column 1 and closing prices in column 2.</li>
+      <li>In the Charts tab: enter the price history range (e.g. <code>A1:B500</code>), the current price cell (e.g. <code>C2</code>), and select the simulation variable.</li>
+      <li>Click <strong>Create Stock Price Overlay</strong>.</li>
+    </ol>
+
+    <h3>Reading the charts</h3>
+    <p>Two charts are created on a sheet named <code>MC_PriceCharts</code>:</p>
+    <ul>
+      <li><strong>Left — Price history:</strong> A line chart showing the stock's actual price over time. Gives visual context for where the current price sits relative to its own history.</li>
+      <li><strong>Right — Simulated distribution:</strong> A horizontal bar chart showing the probability distribution of simulated values, with the current price marked. Bars to the right of the current price represent upside scenarios; bars to the left represent downside.</li>
+    </ul>
+    <p>Together they answer: "Given the simulated distribution, how does the current market price compare to the range of estimated fair values?"</p>
+
+    <!-- ============================================================ -->
+    <h2 id="riskamp">10. Replacing RiskAMP</h2>
+
+    <p>If you're migrating from RiskAMP (or @Risk / Crystal Ball), here is a mapping of the most common functions:</p>
+
+    <table>
+      <thead><tr><th>RiskAMP function</th><th>MC.* equivalent</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><code>RiskPERT(min, likely, max)</code></td><td><code>=MC.SAMPLE(min, likely, max, 4)</code></td><td>Use task pane for bulk simulation instead of per-cell volatile functions</td></tr>
+        <tr><td><code>RiskPERTAlt(min, likely, max, lambda)</code></td><td><code>=MC.SAMPLE(min, likely, max, lambda)</code></td><td>Direct equivalent with lambda parameter</td></tr>
+        <tr><td><code>RiskMean(cell)</code></td><td>Read from MC_Results statistics table</td><td>Task pane writes full stats to Excel</td></tr>
+        <tr><td><code>RiskPercentile(cell, p)</code></td><td>Read from MC_Results percentile table</td><td>P5–P95 written automatically</td></tr>
+        <tr><td><code>RiskNormal(mean, sd)</code></td><td>No direct equivalent — convert to PERT: set min=mean-3*sd, likely=mean, max=mean+3*sd, lambda=6</td><td>PERT with high lambda approximates normal</td></tr>
+        <tr><td><code>RiskCorrmat(...)</code></td><td>Use the Correlations tab in the task pane</td><td>Iman-Conover provides equivalent correlation induction</td></tr>
+        <tr><td><code>RiskSeed(n)</code></td><td>Not needed — LHS provides deterministic stratification</td><td>Results are more stable run-to-run without needing a seed</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info">
+      <strong>Architecture difference</strong>
+      RiskAMP and @Risk work by embedding random-draw functions in each cell and recalculating the sheet N times. This add-in runs all N simulations in a single JavaScript engine pass (much faster for large N) and writes the results to a separate sheet. This is a paradigm shift: your model sheet stays clean; the outputs go to MC_Results.
+    </div>
+
+    <!-- ============================================================ -->
+    <h2 id="faq">11. Frequently Asked Questions</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">Why does the correlation matrix turn red?</div>
+      <p>The matrix is not positive semi-definite — the correlations you've entered are mathematically inconsistent with each other. This typically happens when you mix correlations from different sources, or manually enter values that are geometrically impossible (e.g. A is 0.9 correlated with both B and C, but B and C are -0.9 correlated). Click the <strong>Fix PSD</strong> button to automatically compute the nearest valid matrix.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Why do results change every time I run?</div>
+      <p>Monte Carlo simulation is inherently random. However, with Latin Hypercube Sampling, the variation between runs at 1,000 simulations is much smaller than with simple random sampling. If run-to-run stability matters (e.g. for a report), increase to 5,000 simulations — results will be nearly identical between runs.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What lambda should I use?</div>
+      <p>Start with 4 (the classic PERT default). Increase to 6 if you have high conviction and strong data supporting your mode estimate. Decrease to 2–3 if you're genuinely uncertain about where the peak is. For most financial modelling work, 4 is appropriate.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">How many simulations do I need?</div>
+      <p>With LHS: 1,000 is usually sufficient for stable P10–P90 estimates. For P5/P95, use 2,000+. For P1/P99 or tail risk analysis, use 5,000–10,000. Rule of thumb: if the P10 value changes by more than 1–2% between runs, increase the simulation count.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can I use this for non-financial models?</div>
+      <p>Yes. The PERT distribution works for any quantity you can estimate with min/likely/max: project timelines, engineering tolerances, clinical trial outcomes, market sizing, operational parameters. The default variables are DCF-oriented, but you can replace them with anything.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">The add-in shows "browser mode" — is something broken?</div>
+      <p>No. When you open taskpane.html directly in a browser (not via the Excel add-in), it correctly detects that Excel is not present and disables Excel-specific features. This is expected behaviour. To get full functionality, open it through the Excel ribbon button after sideloading the manifest.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">Can I share the MC_Results sheet with colleagues who don't have the add-in?</div>
+      <p>Yes. The output sheet is plain Excel data — numbers, no add-in dependency. Anyone can open it in any version of Excel. The raw simulation rows let colleagues build their own charts or analyses on top of the results.</p>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">What is the Iman-Conover method?</div>
+      <p>Iman-Conover (1982) is an algorithm for inducing correlations between simulation samples while preserving each variable's marginal distribution exactly. It works by: (1) generating correlated standard normal scores using the target correlation matrix and Cholesky decomposition, (2) converting to ranks, and (3) rearranging the PERT samples so their rank order matches the correlated normal scores. This is superior to naive correlated sampling because it doesn't distort the shape of each individual variable's distribution.</p>
+    </div>
+
+    <hr />
+    <p style="font-size:0.78rem;color:#aaa;text-align:center;margin-top:32px;">
+      Monte Carlo Simulator v1 &mdash; Standalone Edition<br/>
+      All math runs locally in your browser and Excel. No data leaves your machine.
+    </p>
+
+  </main>
+</div>
+
+<script>
+  // Highlight active sidebar link on scroll
+  const sections = document.querySelectorAll("h2[id]");
+  const navLinks = document.querySelectorAll(".sidebar nav a");
+  function onScroll() {
+    let current = "";
+    sections.forEach(s => {
+      if (window.scrollY >= s.offsetTop - 80) current = s.id;
+    });
+    navLinks.forEach(a => {
+      a.classList.toggle("active", a.getAttribute("href") === "#" + current);
+    });
+  }
+  window.addEventListener("scroll", onScroll, {passive: true});
+  onScroll();
+</script>
+</body>
+</html>
