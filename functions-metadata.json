@@ -1,0 +1,203 @@
+{
+  "functions": [
+    {
+      "id": "PERT",
+      "name": "PERT",
+      "description": "Returns the value at a given percentile of the PERT distribution. Lambda=4 is standard PERT; higher values create a more peaked distribution around the mode.",
+      "helpUrl": "{{HOSTING_URL}}/MANUAL.html#functions",
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
+      "parameters": [
+        {
+          "name": "min",
+          "description": "Minimum possible value (optimistic estimate)",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "likely",
+          "description": "Most likely value (mode / best estimate)",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "max",
+          "description": "Maximum possible value (pessimistic estimate)",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "lambda",
+          "description": "Shape parameter (4 = standard PERT; 2 = flatter/more uncertain; 6 = more peaked/confident)",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "percentile",
+          "description": "Percentile to return, from 0 to 100 (e.g. 50 = median, 90 = P90)",
+          "type": "number",
+          "dimensionality": "scalar"
+        }
+      ]
+    },
+    {
+      "id": "PERTMEAN",
+      "name": "PERTMEAN",
+      "description": "Returns the expected value (mean) of the PERT distribution. Formula: (min + lambda * likely + max) / (lambda + 2). Use this to compute the probability-weighted average of your three-point estimate.",
+      "helpUrl": "{{HOSTING_URL}}/MANUAL.html#functions",
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
+      "parameters": [
+        {
+          "name": "min",
+          "description": "Minimum possible value",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "likely",
+          "description": "Most likely value (mode)",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "max",
+          "description": "Maximum possible value",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "lambda",
+          "description": "Shape parameter (4 = standard PERT)",
+          "type": "number",
+          "dimensionality": "scalar"
+        }
+      ]
+    },
+    {
+      "id": "PERTSD",
+      "name": "PERTSD",
+      "description": "Returns the standard deviation of the PERT distribution. Useful for understanding the spread of uncertainty around your three-point estimate.",
+      "helpUrl": "{{HOSTING_URL}}/MANUAL.html#functions",
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
+      "parameters": [
+        {
+          "name": "min",
+          "description": "Minimum possible value",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "likely",
+          "description": "Most likely value (mode)",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "max",
+          "description": "Maximum possible value",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "lambda",
+          "description": "Shape parameter (4 = standard PERT)",
+          "type": "number",
+          "dimensionality": "scalar"
+        }
+      ]
+    },
+    {
+      "id": "NORMALINV",
+      "name": "NORMALINV",
+      "description": "Returns the inverse of the standard normal cumulative distribution function. Equivalent to Excel's NORM.S.INV(). Uses Peter Acklam's rational approximation with max error < 1.15e-9.",
+      "helpUrl": "{{HOSTING_URL}}/MANUAL.html#functions",
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
+      "parameters": [
+        {
+          "name": "p",
+          "description": "Probability value, strictly between 0 and 1",
+          "type": "number",
+          "dimensionality": "scalar"
+        }
+      ]
+    },
+    {
+      "id": "BETAINV",
+      "name": "BETAINV",
+      "description": "Returns the inverse of the Beta distribution CDF. Finds x such that BetaCDF(x; alpha, beta) = p. Uses Newton-Raphson for high numerical precision. The PERT distribution is a scaled Beta distribution.",
+      "helpUrl": "{{HOSTING_URL}}/MANUAL.html#functions",
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
+      "parameters": [
+        {
+          "name": "p",
+          "description": "Probability value, strictly between 0 and 1",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "alpha",
+          "description": "First shape parameter (must be > 0)",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "beta",
+          "description": "Second shape parameter (must be > 0)",
+          "type": "number",
+          "dimensionality": "scalar"
+        }
+      ]
+    },
+    {
+      "id": "SAMPLE",
+      "name": "SAMPLE",
+      "description": "Returns a single random sample from the PERT distribution. VOLATILE — recalculates on every sheet change. For large-scale simulations, use the Monte Carlo Simulator task pane instead.",
+      "helpUrl": "{{HOSTING_URL}}/MANUAL.html#functions",
+      "options": { "volatile": true },
+      "result": {
+        "type": "number",
+        "dimensionality": "scalar"
+      },
+      "parameters": [
+        {
+          "name": "min",
+          "description": "Minimum possible value",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "likely",
+          "description": "Most likely value (mode)",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "max",
+          "description": "Maximum possible value",
+          "type": "number",
+          "dimensionality": "scalar"
+        },
+        {
+          "name": "lambda",
+          "description": "Shape parameter (4 = standard PERT)",
+          "type": "number",
+          "dimensionality": "scalar"
+        }
+      ]
+    }
+  ]
+}
